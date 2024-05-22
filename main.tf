@@ -60,6 +60,7 @@ module "bookstack" {
   alb_name_prefix                       = substr(var.service_name, 0, 6) ## "name_prefix" cannot be longer than 6 characters: "elastic"
   userdata                              = module.bookstack-userdata.userdata
   webserver_permissions                 = data.aws_iam_policy_document.instance_permissions.json
+  alb_access_log_enabled                = true
   stickiness_enabled                    = true
   asg_min_size                          = var.asg_min_size == null ? length(var.backend_subnet_ids) : var.asg_min_size
   asg_max_size                          = var.asg_max_size == null ? length(var.backend_subnet_ids) + 1 : var.asg_max_size
@@ -68,7 +69,7 @@ module "bookstack" {
   alb_healthcheck_path                  = "/login"
   alb_healthcheck_port                  = 80
   alb_healthcheck_response_code_matcher = "200"
-  alb_healthcheck_interval              = 300
+  alb_healthcheck_interval              = 30
   health_check_grace_period             = var.asg_health_check_grace_period
   wait_for_capacity_timeout             = "${var.asg_health_check_grace_period * 1.5}m"
 

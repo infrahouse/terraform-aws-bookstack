@@ -13,7 +13,7 @@ variable "asg_ami" {
 variable "asg_health_check_grace_period" {
   description = "ASG will wait up to this number of minutes for instance to become healthy"
   type        = number
-  default     = 10
+  default     = 600
 }
 
 variable "asg_min_size" {
