@@ -32,6 +32,15 @@ module "bookstack-userdata" {
       "db_database" : aws_db_instance.db.db_name
       "db_username" : jsondecode(aws_secretsmanager_secret_version.db_user.secret_string)["user"]
       "db_password_secret" : aws_secretsmanager_secret.db_user.name
+      "mail_host" : local.smtp_endpoints[data.aws_region.current.name]
+      "mail_port" : 587
+      "mail_encryption" : "tls"
+      "mail_verify_ssl" : false
+      "mail_username" : aws_iam_access_key.bookstack-emailer.id
+      "mail_password_secret" : aws_secretsmanager_secret.ses_smtp_password.name
+      "mail_from" : "BookStack@${data.aws_route53_zone.current.name}"
+      "mail_from_name" : "BookStack"
+      "google_oauth_client_secret" : data.aws_secretsmanager_secret.google_client.name
     }
     "efs" : {
       "file_system_id" : aws_efs_file_system.bookstack-uploads.id

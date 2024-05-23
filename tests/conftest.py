@@ -13,7 +13,7 @@ TEST_ACCOUNT = "303467602807"
 TEST_ROLE_ARN = "arn:aws:iam::303467602807:role/bookstack-tester"
 DEFAULT_PROGRESS_INTERVAL = 10
 TRACE_TERRAFORM = False
-DESTROY_AFTER = True
+DESTROY_AFTER = False
 UBUNTU_CODENAME = "jammy"
 
 LOG = logging.getLogger(__name__)
@@ -92,3 +92,26 @@ def service_network(boto3_session):
         enable_trace=TRACE_TERRAFORM,
     ) as tf_service_network_output:
         yield tf_service_network_output
+
+
+@pytest.fixture()
+def ses(boto3_session):
+    terraform_module_dir = osp.join(TERRAFORM_ROOT_DIR, "ses")
+    # Create service network
+    with open(osp.join(terraform_module_dir, "terraform.tfvars"), "w") as fp:
+        fp.write(
+            dedent(
+                f"""
+                role_arn = "{TEST_ROLE_ARN}"
+                test_zone = "{TEST_ZONE}"
+                region = "{REGION}"
+                """
+            )
+        )
+    with terraform_apply(
+        terraform_module_dir,
+        destroy_after=DESTROY_AFTER,
+        json_output=True,
+        enable_trace=TRACE_TERRAFORM,
+    ) as tf_output:
+        yield tf_output

@@ -64,6 +64,28 @@ variable "extra_repos" {
   default = {}
 }
 
+# Example of the secret content
+# {
+#  "web": {
+#    "client_id": "***.apps.googleusercontent.com",
+#    "project_id": "bookstack-424221",
+#    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+#    "token_uri": "https://oauth2.googleapis.com/token",
+#    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+#    "client_secret": "***",
+#    "redirect_uris": [
+#      "https://bookstack.ci-cd.infrahouse.com"
+#    ],
+#    "javascript_origins": [
+#      "https://bookstack.ci-cd.infrahouse.com"
+#    ]
+#  }
+#}
+variable "google_oauth_client_secret" {
+  description = "AWS secretsmanager secret name with a Google Oauth 'client id' and 'client secret'."
+  type        = string
+}
+
 variable "instance_type" {
   description = "Instance type to run the webserver instances"
   type        = string

@@ -55,7 +55,9 @@ data "aws_iam_policy_document" "instance_permissions" {
     ]
     resources = [
       aws_secretsmanager_secret.bookstack_app_key.arn,
-      aws_secretsmanager_secret.db_user.arn
+      aws_secretsmanager_secret.db_user.arn,
+      aws_secretsmanager_secret.ses_smtp_password.arn,
+      data.aws_secretsmanager_secret.google_client.arn
     ]
   }
 }

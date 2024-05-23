@@ -15,7 +15,7 @@ from tests.conftest import (
 )
 
 
-def test_module(service_network):
+def test_module(service_network, ses):
     subnet_public_ids = service_network["subnet_public_ids"]["value"]
     subnet_private_ids = service_network["subnet_private_ids"]["value"]
     internet_gateway_id = service_network["internet_gateway_id"]["value"]
