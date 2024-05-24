@@ -65,7 +65,7 @@ module "bookstack" {
   alb_internal                          = var.alb_internal
   internet_gateway_id                   = var.internet_gateway_id
   key_pair_name                         = var.key_pair_name == null ? aws_key_pair.deployer.key_name : var.key_pair_name
-  dns_a_records                         = [var.service_name]
+  dns_a_records                         = var.dns_a_records == null ? [var.service_name] : var.dns_a_records
   alb_name_prefix                       = substr(var.service_name, 0, 6) ## "name_prefix" cannot be longer than 6 characters: "elastic"
   userdata                              = module.bookstack-userdata.userdata
   webserver_permissions                 = data.aws_iam_policy_document.instance_permissions.json
