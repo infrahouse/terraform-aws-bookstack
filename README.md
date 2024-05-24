@@ -80,6 +80,7 @@
 | <a name="input_asg_min_size"></a> [asg\_min\_size](#input\_asg\_min\_size) | Minimum number of instances in ASG | `number` | `null` | no |
 | <a name="input_backend_subnet_ids"></a> [backend\_subnet\_ids](#input\_backend\_subnet\_ids) | List of subnet ids where the webserver and database instances will be created | `list(string)` | n/a | yes |
 | <a name="input_db_instance_type"></a> [db\_instance\_type](#input\_db\_instance\_type) | Instance type to run the database instances | `string` | `"db.t3.micro"` | no |
+| <a name="input_dns_a_records"></a> [dns\_a\_records](#input\_dns\_a\_records) | A list of A records the BookStack application will be accessible at. E.g. ["wiki"] or ["bookstack", "docs"]. By default, it will be [var.service\_name]. | `list(string)` | `null` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Name of environment. | `string` | `"development"` | no |
 | <a name="input_extra_files"></a> [extra\_files](#input\_extra\_files) | Additional files to create on an instance. | <pre>list(object({<br>    content     = string<br>    path        = string<br>    permissions = string<br>  }))</pre> | `[]` | no |
 | <a name="input_extra_repos"></a> [extra\_repos](#input\_extra\_repos) | Additional APT repositories to configure on an instance. | <pre>map(object({<br>    source = string<br>    key    = string<br>  }))</pre> | `{}` | no |
