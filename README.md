@@ -23,8 +23,11 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_bookstack"></a> [bookstack](#module\_bookstack) | infrahouse/website-pod/aws | = 2.9.0 |
+| <a name="module_bookstack"></a> [bookstack](#module\_bookstack) | registry.infrahouse.com/infrahouse/website-pod/aws | 3.1.0 |
 | <a name="module_bookstack-userdata"></a> [bookstack-userdata](#module\_bookstack-userdata) | infrahouse/cloud-init/aws | = 1.11.1 |
+| <a name="module_bookstack_app_key"></a> [bookstack\_app\_key](#module\_bookstack\_app\_key) | registry.infrahouse.com/infrahouse/secret/aws | 0.5.0 |
+| <a name="module_db_user"></a> [db\_user](#module\_db\_user) | registry.infrahouse.com/infrahouse/secret/aws | 0.5.0 |
+| <a name="module_ses_smtp_password"></a> [ses\_smtp\_password](#module\_ses\_smtp\_password) | registry.infrahouse.com/infrahouse/secret/aws | 0.5.0 |
 
 ## Resources
 
@@ -39,12 +42,6 @@
 | [aws_iam_user.bookstack-emailer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user) | resource |
 | [aws_iam_user_policy_attachment.bookstack-emailer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user_policy_attachment) | resource |
 | [aws_key_pair.deployer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/key_pair) | resource |
-| [aws_secretsmanager_secret.bookstack_app_key](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
-| [aws_secretsmanager_secret.db_user](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
-| [aws_secretsmanager_secret.ses_smtp_password](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
-| [aws_secretsmanager_secret_version.bookstack_app_key](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
-| [aws_secretsmanager_secret_version.db_user](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
-| [aws_secretsmanager_secret_version.ses_smtp_password](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
 | [aws_security_group.db](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_security_group.efs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_vpc_security_group_egress_rule.efs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_egress_rule) | resource |
@@ -55,7 +52,7 @@
 | [aws_vpc_security_group_ingress_rule.mysql](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_ingress_rule) | resource |
 | [random_id.bookstack_app_key](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) | resource |
 | [random_password.db_user](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
-| [random_string.profile-suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [random_string.role-suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [tls_private_key.rsa](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/resources/private_key) | resource |
 | [aws_ami.ubuntu](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
 | [aws_availability_zones.available](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/availability_zones) | data source |
@@ -100,4 +97,7 @@
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_bookstack_instance_role_arn"></a> [bookstack\_instance\_role\_arn](#output\_bookstack\_instance\_role\_arn) | IAM role ARN assigned to bookstack EC2 instances. |
+| <a name="output_bookstack_urls"></a> [bookstack\_urls](#output\_bookstack\_urls) | List of URLs where bookstack is available. |

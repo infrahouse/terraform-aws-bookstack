@@ -1,11 +1,12 @@
-resource "aws_secretsmanager_secret" "google_client" {
-  description = "A JSON with Google OAuth Client ID"
-  name_prefix = "google_client"
-}
-
-resource "aws_secretsmanager_secret_version" "google_client" {
-  secret_id     = aws_secretsmanager_secret.google_client.id
-  secret_string = <<EOT
+module "google_client" {
+  source             = "infrahouse/secret/aws"
+  version            = "0.5.0"
+  secret_description = "A JSON with Google OAuth Client ID"
+  secret_name_prefix = "google_client"
+  readers = [
+    module.bookstack.bookstack_instance_role_arn
+  ]
+  secret_value = <<EOT
 {
   "web": {
     "client_id": "290217685136-foo.apps.googleusercontent.com",

@@ -54,9 +54,9 @@ data "aws_iam_policy_document" "instance_permissions" {
       "secretsmanager:GetSecretValue"
     ]
     resources = [
-      aws_secretsmanager_secret.bookstack_app_key.arn,
-      aws_secretsmanager_secret.db_user.arn,
-      aws_secretsmanager_secret.ses_smtp_password.arn,
+      module.bookstack_app_key.secret_arn,
+      module.db_user.secret_arn,
+      module.ses_smtp_password.secret_arn,
       data.aws_secretsmanager_secret.google_client.arn
     ]
   }

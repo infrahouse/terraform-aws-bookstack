@@ -1,4 +1,4 @@
-module "test" {
+module "bookstack" {
   source = "../../"
   providers = {
     aws     = aws
@@ -12,5 +12,5 @@ module "test" {
   key_pair_name              = aws_key_pair.mediapc.key_name
   asg_min_size               = 1
   asg_max_size               = 1
-  google_oauth_client_secret = aws_secretsmanager_secret.google_client.name
+  google_oauth_client_secret = module.google_client.secret_name
 }

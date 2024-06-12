@@ -5,7 +5,10 @@ resource "tls_private_key" "rsa" {
 
 resource "aws_key_pair" "deployer" {
   public_key = tls_private_key.rsa.public_key_openssh
-  tags = {
-    service : var.service_name
-  }
+  tags = merge(
+    {
+      service : var.service_name
+    },
+    local.tags
+  )
 }
