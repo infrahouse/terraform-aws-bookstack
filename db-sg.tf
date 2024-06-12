@@ -2,9 +2,12 @@ resource "aws_security_group" "db" {
   description = "${var.service_name} RDS instance"
   name_prefix = var.service_name
   vpc_id      = data.aws_vpc.selected.id
-  tags = {
-    Name : "${var.service_name} RDS"
-  }
+  tags = merge(
+    {
+      Name : "${var.service_name} RDS"
+    },
+    local.tags
+  )
 }
 
 resource "aws_vpc_security_group_ingress_rule" "mysql" {
@@ -14,9 +17,12 @@ resource "aws_vpc_security_group_ingress_rule" "mysql" {
   to_port           = 3306
   ip_protocol       = "tcp"
   cidr_ipv4         = data.aws_vpc.selected.cidr_block
-  tags = {
-    Name = "mysql access"
-  }
+  tags = merge(
+    {
+      Name = "mysql access"
+    },
+    local.tags
+  )
 }
 
 resource "aws_vpc_security_group_ingress_rule" "icmp" {
@@ -26,9 +32,12 @@ resource "aws_vpc_security_group_ingress_rule" "icmp" {
   to_port           = -1
   ip_protocol       = "icmp"
   cidr_ipv4         = "0.0.0.0/0"
-  tags = {
-    Name = "ICMP traffic"
-  }
+  tags = merge(
+    {
+      Name = "ICMP traffic"
+    },
+    local.tags
+  )
 }
 
 resource "aws_vpc_security_group_egress_rule" "outgoing" {

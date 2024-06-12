@@ -26,18 +26,18 @@ module "bookstack-userdata" {
   custom_facts = {
     "bookstack" : {
       "uploads_dir" : "${local.efs_mount_path}/uploads"
-      "app_key_secret" : aws_secretsmanager_secret.bookstack_app_key.name
+      "app_key_secret" : module.bookstack_app_key.secret_name
       "app_url" : "https://${var.service_name}.${data.aws_route53_zone.current.name}"
       "db_host" : aws_db_instance.db.address
       "db_database" : aws_db_instance.db.db_name
-      "db_username" : jsondecode(aws_secretsmanager_secret_version.db_user.secret_string)["user"]
-      "db_password_secret" : aws_secretsmanager_secret.db_user.name
+      "db_username" : jsondecode(module.db_user.secret_value)["user"]
+      "db_password_secret" : module.db_user.secret_name
       "mail_host" : local.smtp_endpoints[data.aws_region.current.name]
       "mail_port" : 587
       "mail_encryption" : "tls"
       "mail_verify_ssl" : false
       "mail_username" : aws_iam_access_key.bookstack-emailer.id
-      "mail_password_secret" : aws_secretsmanager_secret.ses_smtp_password.name
+      "mail_password_secret" : module.ses_smtp_password.secret_name
       "mail_from" : "BookStack@${data.aws_route53_zone.current.name}"
       "mail_from_name" : "BookStack"
       "google_oauth_client_secret" : data.aws_secretsmanager_secret.google_client.name
@@ -50,8 +50,8 @@ module "bookstack-userdata" {
 }
 
 module "bookstack" {
-  source  = "infrahouse/website-pod/aws"
-  version = "= 2.9.0"
+  source  = "registry.infrahouse.com/infrahouse/website-pod/aws"
+  version = "3.1.0"
   providers = {
     aws     = aws
     aws.dns = aws.dns
@@ -65,10 +65,10 @@ module "bookstack" {
   alb_internal                          = var.alb_internal
   internet_gateway_id                   = var.internet_gateway_id
   key_pair_name                         = var.key_pair_name == null ? aws_key_pair.deployer.key_name : var.key_pair_name
-  dns_a_records                         = var.dns_a_records == null ? [var.service_name] : var.dns_a_records
+  dns_a_records                         = local.dns_a_records
   alb_name_prefix                       = substr(var.service_name, 0, 6) ## "name_prefix" cannot be longer than 6 characters: "elastic"
   userdata                              = module.bookstack-userdata.userdata
-  webserver_permissions                 = data.aws_iam_policy_document.instance_permissions.json
+  instance_profile_permissions          = data.aws_iam_policy_document.instance_permissions.json
   alb_access_log_enabled                = true
   stickiness_enabled                    = true
   asg_min_size                          = var.asg_min_size == null ? length(var.backend_subnet_ids) : var.asg_min_size
@@ -83,14 +83,17 @@ module "bookstack" {
   wait_for_capacity_timeout             = "${var.asg_health_check_grace_period * 1.5}m"
 
   asg_min_elb_capacity = 1
-  instance_profile     = "${var.service_name}-${random_string.profile-suffix.result}"
-  tags = {
-    Name : var.service_name
-    service : var.service_name
-  }
+  instance_role_name   = local.ec2_role_name
+  tags = merge(
+    {
+      Name : var.service_name
+      service : var.service_name
+    },
+    local.tags
+  )
 }
 
-resource "random_string" "profile-suffix" {
+resource "random_string" "role-suffix" {
   length  = 6
   special = false
 }

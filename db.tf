@@ -16,12 +16,14 @@ resource "aws_db_instance" "db" {
   vpc_security_group_ids = [
     aws_security_group.db.id
   ]
+  tags = local.tags
 }
 
 
 resource "aws_db_subnet_group" "db" {
   name_prefix = var.service_name
   subnet_ids  = var.backend_subnet_ids
+  tags        = local.tags
 }
 
 
@@ -29,4 +31,3 @@ resource "random_password" "db_user" {
   length  = 21
   special = false
 }
-

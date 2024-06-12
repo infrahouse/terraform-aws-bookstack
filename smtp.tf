@@ -4,6 +4,7 @@ data "aws_ses_domain_identity" "zone" {
 
 resource "aws_iam_user" "bookstack-emailer" {
   name = "bookstack-emailer"
+  tags = local.tags
 }
 
 resource "aws_iam_access_key" "bookstack-emailer" {

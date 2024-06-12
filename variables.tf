@@ -41,8 +41,8 @@ variable "db_instance_type" {
 
 variable "dns_a_records" {
   description = "A list of A records the BookStack application will be accessible at. E.g. [\"wiki\"] or [\"bookstack\", \"docs\"]. By default, it will be [var.service_name]."
-  type = list(string)
-  default = null
+  type        = list(string)
+  default     = null
 }
 
 variable "environment" {
