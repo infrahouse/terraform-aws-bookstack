@@ -41,8 +41,8 @@ variable "db_instance_type" {
 
 variable "dns_a_records" {
   description = "A list of A records the BookStack application will be accessible at. E.g. [\"wiki\"] or [\"bookstack\", \"docs\"]. By default, it will be [var.service_name]."
-  type = list(string)
-  default = null
+  type        = list(string)
+  default     = null
 }
 
 variable "environment" {
@@ -90,6 +90,12 @@ variable "extra_repos" {
 variable "google_oauth_client_secret" {
   description = "AWS secretsmanager secret name with a Google Oauth 'client id' and 'client secret'."
   type        = string
+}
+
+variable "instance_role_name" {
+  description = "If specified, the instance profile role will have this name. Otherwise, the role name will be generated."
+  type        = string
+  default     = "bookstack"
 }
 
 variable "instance_type" {

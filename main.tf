@@ -51,7 +51,7 @@ module "bookstack-userdata" {
 
 module "bookstack" {
   source  = "infrahouse/website-pod/aws"
-  version = "= 2.9.0"
+  version = "3.1.0"
   providers = {
     aws     = aws
     aws.dns = aws.dns
@@ -83,7 +83,7 @@ module "bookstack" {
   wait_for_capacity_timeout             = "${var.asg_health_check_grace_period * 1.5}m"
 
   asg_min_elb_capacity = 1
-  instance_profile     = "${var.service_name}-${random_string.profile-suffix.result}"
+  instance_role_name = var.instance_role_name
   tags = {
     Name : var.service_name
     service : var.service_name
