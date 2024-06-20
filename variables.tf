@@ -146,6 +146,12 @@ variable "service_name" {
   default     = "bookstack"
 }
 
+variable "smtp_credentials_secret" {
+  description = "AWS secret name with SMTP credentials. The secret must contain a JSON with user and password keys."
+  type        = string
+  default     = null
+}
+
 variable "ubuntu_codename" {
   description = "Ubuntu version to use for the elasticsearch node"
   type        = string

@@ -2,8 +2,8 @@ locals {
   efs_mount_path = "/mnt/efs"
 }
 module "bookstack-userdata" {
-  source                   = "infrahouse/cloud-init/aws"
-  version                  = "= 1.11.1"
+  source                   = "registry.infrahouse.com/infrahouse/cloud-init/aws"
+  version                  = "1.12.4"
   environment              = var.environment
   role                     = "bookstack"
   puppet_hiera_config_path = var.puppet_hiera_config_path
@@ -23,30 +23,37 @@ module "bookstack-userdata" {
   extra_files = var.extra_files
   extra_repos = var.extra_repos
 
-  custom_facts = {
-    "bookstack" : {
-      "uploads_dir" : "${local.efs_mount_path}/uploads"
-      "app_key_secret" : module.bookstack_app_key.secret_name
-      "app_url" : "https://${var.service_name}.${data.aws_route53_zone.current.name}"
-      "db_host" : aws_db_instance.db.address
-      "db_database" : aws_db_instance.db.db_name
-      "db_username" : jsondecode(module.db_user.secret_value)["user"]
-      "db_password_secret" : module.db_user.secret_name
-      "mail_host" : local.smtp_endpoints[data.aws_region.current.name]
-      "mail_port" : 587
-      "mail_encryption" : "tls"
-      "mail_verify_ssl" : false
-      "mail_username" : aws_iam_access_key.bookstack-emailer.id
-      "mail_password_secret" : module.ses_smtp_password.secret_name
-      "mail_from" : "BookStack@${data.aws_route53_zone.current.name}"
-      "mail_from_name" : "BookStack"
-      "google_oauth_client_secret" : data.aws_secretsmanager_secret.google_client.name
-    }
-    "efs" : {
-      "file_system_id" : aws_efs_file_system.bookstack-uploads.id
-      "dns_name" : aws_efs_file_system.bookstack-uploads.dns_name
-    }
-  }
+  custom_facts = merge(
+    {
+      "bookstack" : {
+        "uploads_dir" : "${local.efs_mount_path}/uploads"
+        "app_key_secret" : module.bookstack_app_key.secret_name
+        "app_url" : "https://${var.service_name}.${data.aws_route53_zone.current.name}"
+        "db_host" : aws_db_instance.db.address
+        "db_database" : aws_db_instance.db.db_name
+        "db_username" : jsondecode(module.db_user.secret_value)["user"]
+        "db_password_secret" : module.db_user.secret_name
+        "mail_host" : local.smtp_endpoints[data.aws_region.current.name]
+        "mail_port" : 587
+        "mail_encryption" : "tls"
+        "mail_verify_ssl" : false
+        "mail_username" : aws_iam_access_key.bookstack-emailer.id
+        "mail_password_secret" : module.ses_smtp_password.secret_name
+        "mail_from" : "BookStack@${data.aws_route53_zone.current.name}"
+        "mail_from_name" : "BookStack"
+        "google_oauth_client_secret" : data.aws_secretsmanager_secret.google_client.name
+      }
+      "efs" : {
+        "file_system_id" : aws_efs_file_system.bookstack-uploads.id
+        "dns_name" : aws_efs_file_system.bookstack-uploads.dns_name
+      }
+    },
+    var.smtp_credentials_secret != null ? {
+      postfix : {
+        smtp_credentials : var.smtp_credentials_secret
+      }
+    } : {}
+  )
 }
 
 module "bookstack" {
