@@ -1,9 +1,3 @@
-variable "alb_internal" {
-  description = "If true, the LB will be internal."
-  type        = bool
-  default     = false
-}
-
 variable "asg_ami" {
   description = "Image for EC2 instances"
   type        = string
