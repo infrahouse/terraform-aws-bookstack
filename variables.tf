@@ -146,6 +146,12 @@ variable "smtp_credentials_secret" {
   default     = null
 }
 
+variable "ssh_cidr_block" {
+  description = "CIDR range that is allowed to SSH into the backend instances.  Format is a.b.c.d/<prefix>."
+  type        = string
+  default     = null
+}
+
 variable "ubuntu_codename" {
   description = "Ubuntu version to use for the elasticsearch node"
   type        = string
