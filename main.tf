@@ -58,7 +58,7 @@ module "bookstack-userdata" {
 
 module "bookstack" {
   source  = "registry.infrahouse.com/infrahouse/website-pod/aws"
-  version = "3.3.9"
+  version = "4.0.0"
   providers = {
     aws     = aws
     aws.dns = aws.dns
@@ -69,7 +69,6 @@ module "bookstack" {
   subnets                               = var.lb_subnet_ids
   backend_subnets                       = var.backend_subnet_ids
   zone_id                               = var.zone_id
-  alb_internal                          = var.alb_internal
   internet_gateway_id                   = var.internet_gateway_id
   key_pair_name                         = var.key_pair_name == null ? aws_key_pair.deployer.key_name : var.key_pair_name
   ssh_cidr_block                        = data.aws_vpc.selected.cidr_block
