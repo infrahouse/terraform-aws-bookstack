@@ -71,7 +71,7 @@ module "bookstack" {
   zone_id                               = var.zone_id
   internet_gateway_id                   = var.internet_gateway_id
   key_pair_name                         = var.key_pair_name == null ? aws_key_pair.deployer.key_name : var.key_pair_name
-  ssh_cidr_block                        = data.aws_vpc.selected.cidr_block
+  ssh_cidr_block                        = var.ssh_cidr_block
   dns_a_records                         = local.dns_a_records
   alb_name_prefix                       = substr(var.service_name, 0, 6) ## "name_prefix" cannot be longer than 6 characters: "elastic"
   userdata                              = module.bookstack-userdata.userdata
