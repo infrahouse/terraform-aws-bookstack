@@ -25,21 +25,6 @@ resource "aws_vpc_security_group_ingress_rule" "mysql" {
   )
 }
 
-resource "aws_vpc_security_group_ingress_rule" "icmp" {
-  description       = "Allow all ICMP traffic"
-  security_group_id = aws_security_group.db.id
-  from_port         = -1
-  to_port           = -1
-  ip_protocol       = "icmp"
-  cidr_ipv4         = "0.0.0.0/0"
-  tags = merge(
-    {
-      Name = "ICMP traffic"
-    },
-    local.tags
-  )
-}
-
 resource "aws_vpc_security_group_egress_rule" "outgoing" {
   security_group_id = aws_security_group.db.id
   ip_protocol       = "-1"
