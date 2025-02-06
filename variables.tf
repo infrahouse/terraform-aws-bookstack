@@ -146,6 +146,12 @@ variable "smtp_credentials_secret" {
   default     = null
 }
 
+variable "storage_encryption_key_arn" {
+  description = "KMS key ARN to encrypt RDS instance storage."
+  type        = string
+  default     = null
+}
+
 variable "ssh_cidr_block" {
   description = "CIDR range that is allowed to SSH into the backend instances.  Format is a.b.c.d/<prefix>."
   type        = string

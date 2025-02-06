@@ -11,4 +11,11 @@ locals {
   dns_a_records = var.dns_a_records == null ? [var.service_name] : var.dns_a_records
   ec2_role_name = "${var.service_name}-${random_string.role-suffix.result}"
   ec2_role_arn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.ec2_role_name}"
+  db_params_common = [
+    {
+      apply_method = "immediate"
+      name         = "binlog_format"
+      value        = "ROW"
+    },
+  ]
 }
