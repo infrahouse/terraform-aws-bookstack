@@ -7,3 +7,8 @@ output "bookstack_instance_role_arn" {
   description = "IAM role ARN assigned to bookstack EC2 instances."
   value       = local.ec2_role_arn
 }
+
+output "rds_instance_identifier" {
+  description = "Identifier of the RDS instance."
+  value       = aws_db_instance.db.identifier
+}
