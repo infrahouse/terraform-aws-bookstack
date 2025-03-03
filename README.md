@@ -104,3 +104,5 @@
 | <a name="output_bookstack_instance_role_arn"></a> [bookstack\_instance\_role\_arn](#output\_bookstack\_instance\_role\_arn) | IAM role ARN assigned to bookstack EC2 instances. |
 | <a name="output_bookstack_urls"></a> [bookstack\_urls](#output\_bookstack\_urls)                                            | List of URLs where bookstack is available.        | 
 | <a name="output_rds_instance_identifier"></a> [rds\_instance\_identifier](#output\_rds\_instance\_indentifier)              | Identifier of the RDS instance.                   |
+| <a name="output_bookstack_load_balancer_arn"></a> [bookstack\_bookstack\_load\_balancer\_arn](#output\_bookstack\_load\_balancer\_arn)     | ARN of the load balancer for the BookStack website pod. |
+
