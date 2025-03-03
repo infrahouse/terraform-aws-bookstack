@@ -12,3 +12,8 @@ output "rds_instance_identifier" {
   description = "Identifier of the RDS instance."
   value       = aws_db_instance.db.identifier
 }
+
+output "bookstack_load_balancer_arn" {
+  description = "ARN of the load balancer for the BookStack website pod."
+  value       = module.bookstack.load_balancer_arn
+}
