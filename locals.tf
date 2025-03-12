@@ -18,4 +18,8 @@ locals {
       value        = "ROW"
     },
   ]
+  ami_name_pattern = contains(
+    ["focal", "jammy"], var.ubuntu_codename
+  ) ? "ubuntu/images/hvm-ssd/ubuntu-${var.ubuntu_codename}-*" : "ubuntu/images/hvm-ssd-gp3/ubuntu-${var.ubuntu_codename}-*"
+
 }
