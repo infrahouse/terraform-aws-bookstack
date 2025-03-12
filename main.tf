@@ -3,11 +3,12 @@ locals {
 }
 module "bookstack-userdata" {
   source                   = "registry.infrahouse.com/infrahouse/cloud-init/aws"
-  version                  = "1.12.4"
+  version                  = "1.17.0"
   environment              = var.environment
   role                     = "bookstack"
   puppet_hiera_config_path = var.puppet_hiera_config_path
   puppet_module_path       = var.puppet_module_path
+  ubuntu_codename          = var.ubuntu_codename
 
   packages = concat(
     var.packages,
@@ -15,11 +16,6 @@ module "bookstack-userdata" {
       "nfs-common"
     ]
   )
-  pre_runcmd = [
-    "/opt/puppetlabs/puppet/bin/gem install json",
-    "/opt/puppetlabs/puppet/bin/gem install aws-sdk-core",
-    "/opt/puppetlabs/puppet/bin/gem install aws-sdk-secretsmanager"
-  ]
   extra_files = var.extra_files
   extra_repos = var.extra_repos
 
