@@ -54,7 +54,7 @@ module "bookstack-userdata" {
 
 module "bookstack" {
   source  = "registry.infrahouse.com/infrahouse/website-pod/aws"
-  version = "5.1.0"
+  version = "5.1.3"
   providers = {
     aws     = aws
     aws.dns = aws.dns
