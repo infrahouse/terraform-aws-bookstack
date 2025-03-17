@@ -54,14 +54,14 @@ module "bookstack-userdata" {
 
 module "bookstack" {
   source  = "registry.infrahouse.com/infrahouse/website-pod/aws"
-  version = "5.1.0"
+  version = "5.1.3"
   providers = {
     aws     = aws
     aws.dns = aws.dns
   }
   service_name                          = var.service_name
   environment                           = var.environment
-  ami                                   = var.asg_ami != null ? var.asg_ami : data.aws_ami.ubuntu.image_id
+  ami                                   = var.asg_ami != null ? var.asg_ami : data.aws_ami.ubuntu_pro.image_id
   subnets                               = var.lb_subnet_ids
   backend_subnets                       = var.backend_subnet_ids
   zone_id                               = var.zone_id
