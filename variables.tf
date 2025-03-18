@@ -1,3 +1,9 @@
+variable "access_log_force_destroy" {
+  description = "Destroy S3 bucket with access logs even if non-empty"
+  type        = bool
+  default     = false
+}
+
 variable "asg_ami" {
   description = "Image for EC2 instances"
   type        = string
@@ -47,20 +53,28 @@ variable "environment" {
 
 variable "extra_files" {
   description = "Additional files to create on an instance."
-  type = list(object({
-    content     = string
-    path        = string
-    permissions = string
-  }))
+  type = list(
+    object(
+      {
+        content     = string
+        path        = string
+        permissions = string
+      }
+    )
+  )
   default = []
 }
 
 variable "extra_repos" {
   description = "Additional APT repositories to configure on an instance."
-  type = map(object({
-    source = string
-    key    = string
-  }))
+  type = map(
+    object(
+      {
+        source = string
+        key    = string
+      }
+    )
+  )
   default = {}
 }
 
