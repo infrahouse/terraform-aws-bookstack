@@ -73,6 +73,7 @@ module "bookstack" {
   userdata                              = module.bookstack-userdata.userdata
   instance_profile_permissions          = data.aws_iam_policy_document.instance_permissions.json
   alb_access_log_enabled                = true
+  alb_access_log_force_destroy          = var.access_log_force_destroy
   stickiness_enabled                    = true
   asg_min_size                          = var.asg_min_size == null ? length(var.backend_subnet_ids) : var.asg_min_size
   asg_max_size                          = var.asg_max_size == null ? length(var.backend_subnet_ids) + 1 : var.asg_max_size
