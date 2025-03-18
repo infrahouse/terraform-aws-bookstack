@@ -23,8 +23,8 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_bookstack"></a> [bookstack](#module\_bookstack) | registry.infrahouse.com/infrahouse/website-pod/aws | 4.0.0 |
-| <a name="module_bookstack-userdata"></a> [bookstack-userdata](#module\_bookstack-userdata) | registry.infrahouse.com/infrahouse/cloud-init/aws | 1.12.4 |
+| <a name="module_bookstack"></a> [bookstack](#module\_bookstack) | registry.infrahouse.com/infrahouse/website-pod/aws | 5.1.3 |
+| <a name="module_bookstack-userdata"></a> [bookstack-userdata](#module\_bookstack-userdata) | registry.infrahouse.com/infrahouse/cloud-init/aws | 1.17.0 |
 | <a name="module_bookstack_app_key"></a> [bookstack\_app\_key](#module\_bookstack\_app\_key) | registry.infrahouse.com/infrahouse/secret/aws | 0.5.0 |
 | <a name="module_db_user"></a> [db\_user](#module\_db\_user) | registry.infrahouse.com/infrahouse/secret/aws | 0.5.0 |
 | <a name="module_ses_smtp_password"></a> [ses\_smtp\_password](#module\_ses\_smtp\_password) | registry.infrahouse.com/infrahouse/secret/aws | 0.5.0 |
@@ -54,7 +54,7 @@
 | [random_password.db_user](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 | [random_string.role-suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [tls_private_key.rsa](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/resources/private_key) | resource |
-| [aws_ami.ubuntu](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
+| [aws_ami.ubuntu_pro](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
 | [aws_availability_zones.available](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/availability_zones) | data source |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_iam_policy_document.bookstack-emailer-permissions](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
@@ -70,6 +70,7 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_access_log_force_destroy"></a> [access\_log\_force\_destroy](#input\_access\_log\_force\_destroy) | Destroy S3 bucket with access logs even if non-empty | `bool` | `false` | no |
 | <a name="input_asg_ami"></a> [asg\_ami](#input\_asg\_ami) | Image for EC2 instances | `string` | `null` | no |
 | <a name="input_asg_health_check_grace_period"></a> [asg\_health\_check\_grace\_period](#input\_asg\_health\_check\_grace\_period) | ASG will wait up to this number of minutes for instance to become healthy | `number` | `600` | no |
 | <a name="input_asg_max_size"></a> [asg\_max\_size](#input\_asg\_max\_size) | Maximum number of instances in ASG | `number` | `null` | no |
@@ -78,8 +79,8 @@
 | <a name="input_db_instance_type"></a> [db\_instance\_type](#input\_db\_instance\_type) | Instance type to run the database instances | `string` | `"db.t3.micro"` | no |
 | <a name="input_dns_a_records"></a> [dns\_a\_records](#input\_dns\_a\_records) | A list of A records the BookStack application will be accessible at. E.g. ["wiki"] or ["bookstack", "docs"]. By default, it will be [var.service\_name]. | `list(string)` | `null` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Name of environment. | `string` | `"development"` | no |
-| <a name="input_extra_files"></a> [extra\_files](#input\_extra\_files) | Additional files to create on an instance. | <pre>list(object({<br/>    content     = string<br/>    path        = string<br/>    permissions = string<br/>  }))</pre> | `[]` | no |
-| <a name="input_extra_repos"></a> [extra\_repos](#input\_extra\_repos) | Additional APT repositories to configure on an instance. | <pre>map(object({<br/>    source = string<br/>    key    = string<br/>  }))</pre> | `{}` | no |
+| <a name="input_extra_files"></a> [extra\_files](#input\_extra\_files) | Additional files to create on an instance. | <pre>list(<br/>    object(<br/>      {<br/>        content     = string<br/>        path        = string<br/>        permissions = string<br/>      }<br/>    )<br/>  )</pre> | `[]` | no |
+| <a name="input_extra_repos"></a> [extra\_repos](#input\_extra\_repos) | Additional APT repositories to configure on an instance. | <pre>map(<br/>    object(<br/>      {<br/>        source = string<br/>        key    = string<br/>      }<br/>    )<br/>  )</pre> | `{}` | no |
 | <a name="input_google_oauth_client_secret"></a> [google\_oauth\_client\_secret](#input\_google\_oauth\_client\_secret) | AWS secretsmanager secret name with a Google Oauth 'client id' and 'client secret'. | `string` | n/a | yes |
 | <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type) | Instance type to run the webserver instances | `string` | `"t3.micro"` | no |
 | <a name="input_internet_gateway_id"></a> [internet\_gateway\_id](#input\_internet\_gateway\_id) | Not used, but AWS Internet Gateway must be present. Ensure by passing its id. | `string` | n/a | yes |
@@ -99,10 +100,9 @@
 
 ## Outputs
 
-| Name                                                                                                                        | Description                                       |
-|-----------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
+| Name | Description |
+|------|-------------|
 | <a name="output_bookstack_instance_role_arn"></a> [bookstack\_instance\_role\_arn](#output\_bookstack\_instance\_role\_arn) | IAM role ARN assigned to bookstack EC2 instances. |
-| <a name="output_bookstack_urls"></a> [bookstack\_urls](#output\_bookstack\_urls)                                            | List of URLs where bookstack is available.        | 
-| <a name="output_rds_instance_identifier"></a> [rds\_instance\_identifier](#output\_rds\_instance\_indentifier)              | Identifier of the RDS instance.                   |
-| <a name="output_bookstack_load_balancer_arn"></a> [bookstack\_bookstack\_load\_balancer\_arn](#output\_bookstack\_load\_balancer\_arn)     | ARN of the load balancer for the BookStack website pod. |
-
+| <a name="output_bookstack_load_balancer_arn"></a> [bookstack\_load\_balancer\_arn](#output\_bookstack\_load\_balancer\_arn) | ARN of the load balancer for the BookStack website pod. |
+| <a name="output_bookstack_urls"></a> [bookstack\_urls](#output\_bookstack\_urls) | List of URLs where bookstack is available. |
+| <a name="output_rds_instance_identifier"></a> [rds\_instance\_identifier](#output\_rds\_instance\_identifier) | Identifier of the RDS instance. |
