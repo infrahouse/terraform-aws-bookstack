@@ -54,7 +54,7 @@ module "bookstack-userdata" {
 
 module "bookstack" {
   source  = "registry.infrahouse.com/infrahouse/website-pod/aws"
-  version = "5.1.3"
+  version = "5.2.0"
   providers = {
     aws     = aws
     aws.dns = aws.dns
@@ -85,9 +85,9 @@ module "bookstack" {
   alb_healthcheck_interval              = 30
   health_check_grace_period             = var.asg_health_check_grace_period
   wait_for_capacity_timeout             = "${var.asg_health_check_grace_period * 1.5}m"
-
-  asg_min_elb_capacity = 1
-  instance_role_name   = local.ec2_role_name
+  sns_topic_alarm_arn                   = var.sns_topic_alarm_arn
+  asg_min_elb_capacity                  = 1
+  instance_role_name                    = local.ec2_role_name
   tags = merge(
     {
       Name : var.service_name
