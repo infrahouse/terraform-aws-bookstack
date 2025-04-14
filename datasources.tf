@@ -46,6 +46,7 @@ data "aws_route53_zone" "current" {
 }
 
 data "aws_iam_policy_document" "instance_permissions" {
+  source_policy_documents = var.extra_instance_profile_permissions != null ? [var.extra_instance_profile_permissions] : []
   statement {
     actions   = ["sts:GetCallerIdentity"]
     resources = ["*"]
