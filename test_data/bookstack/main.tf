@@ -20,4 +20,6 @@ module "bookstack" {
   ubuntu_codename            = var.ubuntu_codename
   ssh_cidr_block             = "0.0.0.0/0"
   access_log_force_destroy   = true
+  skip_final_snapshot        = true
+  deletion_protection        = false
 }
