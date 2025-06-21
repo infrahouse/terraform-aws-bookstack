@@ -3,7 +3,7 @@ locals {
 }
 module "bookstack-userdata" {
   source                   = "registry.infrahouse.com/infrahouse/cloud-init/aws"
-  version                  = "1.17.0"
+  version                  = "1.18.0"
   environment              = var.environment
   role                     = "bookstack"
   puppet_hiera_config_path = var.puppet_hiera_config_path
