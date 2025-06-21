@@ -11,8 +11,8 @@ resource "aws_db_instance" "db" {
   db_subnet_group_name      = aws_db_subnet_group.db.name
   multi_az                  = true
   backup_retention_period   = 7
-  deletion_protection       = false
-  skip_final_snapshot       = false
+  deletion_protection       = var.deletion_protection
+  skip_final_snapshot       = var.skip_final_snapshot
   apply_immediately         = true
   final_snapshot_identifier = "${var.service_name}-final-snapshot"
   parameter_group_name      = aws_db_parameter_group.mysql.name

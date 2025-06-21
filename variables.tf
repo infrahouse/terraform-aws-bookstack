@@ -194,3 +194,15 @@ variable "extra_instance_profile_permissions" {
   type        = string
   default     = null
 }
+
+variable "deletion_protection" {
+  description = "Specifies whether to enable deletion protection for the DB instance."
+  type        = bool
+  default     = true
+}
+
+variable "skip_final_snapshot" {
+  description = "Specifies whether to skip the final snapshot when the DB instance is deleted."
+  type        = bool
+  default     = false
+}
