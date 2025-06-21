@@ -1,5 +1,7 @@
 variable "region" {}
-variable "role_arn" {}
+variable "role_arn" {
+  default = null
+}
 variable "test_zone" {}
 
 variable "backend_subnet_ids" {}
