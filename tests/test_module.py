@@ -11,7 +11,7 @@ from tests.conftest import (
 
 
 def test_module(
-    service_network, aws_region, test_role_arn, test_zone_name, keep_after
+    service_network, ses, aws_region, test_role_arn, test_zone_name, keep_after
 ):
     subnet_public_ids = service_network["subnet_public_ids"]["value"]
     # subnet_private_ids = service_network["subnet_private_ids"]["value"]
