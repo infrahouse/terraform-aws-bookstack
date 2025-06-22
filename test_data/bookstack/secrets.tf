@@ -3,6 +3,7 @@ module "google_client" {
   version            = "1.0.2"
   secret_description = "A JSON with Google OAuth Client ID"
   secret_name_prefix = "google_client"
+  environment        = "development"
   readers = [
     module.bookstack.bookstack_instance_role_arn
   ]
