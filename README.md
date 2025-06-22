@@ -28,11 +28,11 @@ and other resources required for running BookStack.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_bookstack"></a> [bookstack](#module\_bookstack) | registry.infrahouse.com/infrahouse/website-pod/aws | 5.2.0 |
+| <a name="module_bookstack"></a> [bookstack](#module\_bookstack) | registry.infrahouse.com/infrahouse/website-pod/aws | 5.4.1 |
 | <a name="module_bookstack-userdata"></a> [bookstack-userdata](#module\_bookstack-userdata) | registry.infrahouse.com/infrahouse/cloud-init/aws | 1.18.0 |
-| <a name="module_bookstack_app_key"></a> [bookstack\_app\_key](#module\_bookstack\_app\_key) | registry.infrahouse.com/infrahouse/secret/aws | 0.7.9 |
-| <a name="module_db_user"></a> [db\_user](#module\_db\_user) | registry.infrahouse.com/infrahouse/secret/aws | 0.7.9 |
-| <a name="module_ses_smtp_password"></a> [ses\_smtp\_password](#module\_ses\_smtp\_password) | registry.infrahouse.com/infrahouse/secret/aws | 0.7.9 |
+| <a name="module_bookstack_app_key"></a> [bookstack\_app\_key](#module\_bookstack\_app\_key) | registry.infrahouse.com/infrahouse/secret/aws | 1.0.2 |
+| <a name="module_db_user"></a> [db\_user](#module\_db\_user) | registry.infrahouse.com/infrahouse/secret/aws | 1.0.2 |
+| <a name="module_ses_smtp_password"></a> [ses\_smtp\_password](#module\_ses\_smtp\_password) | registry.infrahouse.com/infrahouse/secret/aws | 1.0.2 |
 
 ## Resources
 
