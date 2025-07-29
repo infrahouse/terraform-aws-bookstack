@@ -210,7 +210,7 @@ variable "skip_final_snapshot" {
 variable "efs_encrypted" {
   description = "Whether to enable encryption for the EFS file system."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "efs_kms_key_id" {
