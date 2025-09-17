@@ -1,6 +1,6 @@
 module "bookstack_app_key" {
   source             = "registry.infrahouse.com/infrahouse/secret/aws"
-  version            = "1.0.3"
+  version            = "1.1.0"
   environment        = var.environment
   secret_description = "Bookstack application key, used for its encryption tasks."
   secret_name        = "bookstack_app_key"
@@ -17,7 +17,7 @@ resource "random_id" "bookstack_app_key" {
 
 module "db_user" {
   source             = "registry.infrahouse.com/infrahouse/secret/aws"
-  version            = "1.0.3"
+  version            = "1.1.0"
   environment        = var.environment
   secret_description = "${var.service_name} database username and password"
   secret_name_prefix = "bookstack_db"
@@ -35,7 +35,7 @@ module "db_user" {
 
 module "ses_smtp_password" {
   source             = "registry.infrahouse.com/infrahouse/secret/aws"
-  version            = "1.0.3"
+  version            = "1.1.0"
   environment        = var.environment
   secret_description = "${var.service_name} SES SMTP password"
   secret_name_prefix = "${var.service_name}_ses_smtp_password"
