@@ -33,7 +33,7 @@ module "bookstack-userdata" {
         "mail_port" : 587
         "mail_encryption" : "tls"
         "mail_verify_ssl" : false
-        "mail_username" : aws_iam_access_key.bookstack-emailer.id
+        "mail_username" : aws_iam_access_key.emailer.id
         "mail_password_secret" : module.ses_smtp_password.secret_name
         "mail_from" : "BookStack@${data.aws_route53_zone.current.name}"
         "mail_from_name" : "BookStack"

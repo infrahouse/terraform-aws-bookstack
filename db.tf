@@ -16,7 +16,7 @@ resource "aws_db_instance" "db" {
   apply_immediately         = true
   final_snapshot_identifier = "${var.service_name}-final-snapshot"
   parameter_group_name      = aws_db_parameter_group.mysql.name
-  storage_encrypted         = var.storage_encryption_key_arn != null ? true : false
+  storage_encrypted         = true
   kms_key_id                = var.storage_encryption_key_arn
   vpc_security_group_ids = [
     aws_security_group.db.id
