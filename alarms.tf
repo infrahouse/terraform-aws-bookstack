@@ -55,14 +55,14 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu" {
   count = var.enable_rds_alarms ? 1 : 0
 
   alarm_name          = "${var.service_name}-rds-cpu-utilization"
-  alarm_description   = "RDS CPU utilization for ${var.service_name} is too high"
+  alarm_description   = "RDS CPU utilization for ${var.service_name} exceeds ${var.rds_cpu_threshold}%"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
   metric_name         = "CPUUtilization"
   namespace           = "AWS/RDS"
   period              = 300
   statistic           = "Average"
-  threshold           = 80
+  threshold           = var.rds_cpu_threshold
   treat_missing_data  = "notBreaching"
 
   dimensions = {
@@ -84,14 +84,14 @@ resource "aws_cloudwatch_metric_alarm" "rds_storage" {
   count = var.enable_rds_alarms ? 1 : 0
 
   alarm_name          = "${var.service_name}-rds-free-storage"
-  alarm_description   = "RDS free storage for ${var.service_name} is running low"
+  alarm_description   = "RDS free storage for ${var.service_name} is below ${var.rds_storage_threshold_gb}GB"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = 1
   metric_name         = "FreeStorageSpace"
   namespace           = "AWS/RDS"
   period              = 300
   statistic           = "Average"
-  threshold           = 5000000000 # 5 GB
+  threshold           = var.rds_storage_threshold_gb * 1024 * 1024 * 1024 # Convert GB to bytes
   treat_missing_data  = "notBreaching"
 
   dimensions = {
@@ -113,14 +113,14 @@ resource "aws_cloudwatch_metric_alarm" "rds_connections" {
   count = var.enable_rds_alarms ? 1 : 0
 
   alarm_name          = "${var.service_name}-rds-connections"
-  alarm_description   = "RDS database connections for ${var.service_name} approaching maximum"
+  alarm_description   = "RDS database connections for ${var.service_name} exceeds ${var.rds_connections_threshold}"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
   metric_name         = "DatabaseConnections"
   namespace           = "AWS/RDS"
   period              = 300
   statistic           = "Average"
-  threshold           = 80 # Adjust based on instance type
+  threshold           = var.rds_connections_threshold
   treat_missing_data  = "notBreaching"
 
   dimensions = {

@@ -304,6 +304,100 @@ variable "enable_rds_alarms" {
   default     = true
 }
 
+variable "rds_cpu_threshold" {
+  description = <<-EOF
+    RDS CPU utilization percentage threshold for alarms.
+    Default is 80% - alarm triggers when CPU exceeds this value.
+  EOF
+  type        = number
+  default     = 80
+
+  validation {
+    condition     = var.rds_cpu_threshold >= 0 && var.rds_cpu_threshold <= 100
+    error_message = "CPU threshold must be between 0 and 100"
+  }
+}
+
+variable "rds_storage_threshold_gb" {
+  description = <<-EOF
+    RDS free storage space threshold in gigabytes (GB) for alarms.
+    Default is 5GB - alarm triggers when free space drops below this value.
+  EOF
+  type        = number
+  default     = 5
+
+  validation {
+    condition     = var.rds_storage_threshold_gb >= 0
+    error_message = "Storage threshold must be a positive number (in GB)"
+  }
+}
+
+variable "rds_connections_threshold" {
+  description = <<-EOF
+    RDS database connections threshold for alarms.
+    Default is 80 - alarm triggers when connection count exceeds this value.
+    Adjust based on your instance type's max_connections setting.
+  EOF
+  type        = number
+  default     = 80
+
+  validation {
+    condition     = var.rds_connections_threshold >= 0
+    error_message = "Connections threshold must be a positive number"
+  }
+}
+
+variable "enable_rds_cloudwatch_logs" {
+  description = <<-EOF
+    Enable CloudWatch logs export for RDS.
+    Exports error, general, and slow query logs to CloudWatch.
+  EOF
+  type        = bool
+  default     = true
+}
+
+variable "rds_cloudwatch_logs_retention_days" {
+  description = <<-EOF
+    Number of days to retain RDS CloudWatch logs.
+    Default is 365 days (1 year). Set to 0 for never expire.
+    Valid values: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653
+  EOF
+  type        = number
+  default     = 365
+
+  validation {
+    condition = contains([
+      0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731,
+      1096, 1827, 2192, 2557, 2922, 3288, 3653
+    ], var.rds_cloudwatch_logs_retention_days)
+    error_message = "Retention days must be one of AWS's allowed values: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653"
+  }
+}
+
+variable "enable_rds_performance_insights" {
+  description = <<-EOF
+    Enable Performance Insights for RDS.
+    Provides advanced database performance monitoring and analysis.
+  EOF
+  type        = bool
+  default     = true
+}
+
+variable "rds_performance_insights_retention_days" {
+  description = <<-EOF
+    Number of days to retain Performance Insights data.
+    Valid values: 7 (free tier) or 731 (2 years, additional cost).
+    Default is 7 days.
+  EOF
+  type        = number
+  default     = 7
+
+  validation {
+    condition     = contains([7, 731], var.rds_performance_insights_retention_days)
+    error_message = "Performance Insights retention must be 7 (free tier) or 731 days (2 years)"
+  }
+}
+
 variable "smtp_key_rotation_days" {
   description = "Number of days between SMTP credential rotations"
   type        = number

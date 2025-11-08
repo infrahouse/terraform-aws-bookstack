@@ -21,6 +21,15 @@ resource "aws_db_instance" "db" {
   vpc_security_group_ids = [
     aws_security_group.db.id
   ]
+
+  # CloudWatch Logs Export
+  enabled_cloudwatch_logs_exports = var.enable_rds_cloudwatch_logs ? ["error", "general", "slowquery"] : []
+
+  # Performance Insights
+  performance_insights_enabled          = var.enable_rds_performance_insights
+  performance_insights_kms_key_id       = var.enable_rds_performance_insights ? var.storage_encryption_key_arn : null
+  performance_insights_retention_period = var.enable_rds_performance_insights ? var.rds_performance_insights_retention_days : null
+
   tags = merge(
     local.tags,
     {
