@@ -39,6 +39,7 @@ test-keep:  ## Run a test and keep resources
 		--aws-region=${TEST_REGION} \
 		--test-role-arn=${TEST_ROLE} \
 		--keep-after \
+		-k aws-6 \
 		tests/test_module.py
 
 .PHONY: test-clean
@@ -46,6 +47,7 @@ test-clean:  ## Run a test and destroy resources
 	pytest -xvvs \
 		--aws-region=${TEST_REGION} \
 		--test-role-arn=${TEST_ROLE} \
+		-k aws-6 \
 		tests/test_module.py
 
 

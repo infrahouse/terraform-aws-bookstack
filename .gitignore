@@ -30,6 +30,7 @@ override.tf.json
 .terraform.lock.hcl
 terraform.tfvars
 tf.plan
+test_data/bookstack/terraform.tf
 .idea
 /docs/_build/
 /plan.stderr

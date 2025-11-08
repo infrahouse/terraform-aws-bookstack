@@ -12,7 +12,8 @@
       "Bash(terraform init:*)",
       "Bash(terraform validate:*)",
       "Bash(cat:*)",
-      "WebFetch(domain:aws.amazon.com)"
+      "WebFetch(domain:aws.amazon.com)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
