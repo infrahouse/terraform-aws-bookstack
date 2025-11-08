@@ -39,7 +39,7 @@ module "ses_smtp_password" {
   environment        = var.environment
   secret_description = "${var.service_name} SES SMTP password"
   secret_name_prefix = "${var.service_name}_ses_smtp_password"
-  secret_value       = aws_iam_access_key.bookstack-emailer.ses_smtp_password_v4
+  secret_value       = aws_iam_access_key.emailer.ses_smtp_password_v4
   tags               = local.tags
   readers = [
     local.ec2_role_arn

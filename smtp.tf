@@ -2,33 +2,54 @@ data "aws_ses_domain_identity" "zone" {
   domain = data.aws_route53_zone.current.name
 }
 
-resource "aws_iam_user" "bookstack-emailer" {
-  name = "bookstack-emailer"
+# IAM user for sending emails via SES
+resource "aws_iam_user" "emailer" {
+  name = "${var.service_name}-emailer"
   tags = local.tags
 }
 
-resource "aws_iam_access_key" "bookstack-emailer" {
-  user = aws_iam_user.bookstack-emailer.name
+# Time-based rotation trigger
+resource "time_rotating" "key_rotation" {
+  rotation_days = var.smtp_key_rotation_days
 }
 
-data "aws_iam_policy_document" "bookstack-emailer-permissions" {
+# Access key with automatic rotation
+resource "aws_iam_access_key" "emailer" {
+  user = aws_iam_user.emailer.name
+
+  lifecycle {
+    replace_triggered_by = [
+      time_rotating.key_rotation
+    ]
+    create_before_destroy = true
+  }
+}
+
+# SES permissions with domain restriction
+data "aws_iam_policy_document" "emailer_permissions" {
   statement {
     actions = [
       "ses:SendEmail",
       "ses:SendRawEmail"
     ]
-    resources = [
-      "*"
-    ]
+    resources = ["*"]
+
+    condition {
+      test     = "StringLike"
+      variable = "ses:FromAddress"
+      values   = ["*@${data.aws_route53_zone.current.name}"]
+    }
   }
 }
 
-resource "aws_iam_policy" "bookstack-emailer" {
-  name   = "bookstack-emailer"
-  policy = data.aws_iam_policy_document.bookstack-emailer-permissions.json
+resource "aws_iam_policy" "emailer" {
+  name   = "${var.service_name}-emailer"
+  policy = data.aws_iam_policy_document.emailer_permissions.json
+
+  tags = local.tags
 }
 
-resource "aws_iam_user_policy_attachment" "bookstack-emailer" {
-  user       = aws_iam_user.bookstack-emailer.name
-  policy_arn = aws_iam_policy.bookstack-emailer.arn
+resource "aws_iam_user_policy_attachment" "emailer" {
+  user       = aws_iam_user.emailer.name
+  policy_arn = aws_iam_policy.emailer.arn
 }

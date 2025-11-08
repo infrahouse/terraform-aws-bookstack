@@ -40,7 +40,11 @@ variable "db_instance_type" {
 }
 
 variable "dns_a_records" {
-  description = "A list of A records the BookStack application will be accessible at. E.g. [\"wiki\"] or [\"bookstack\", \"docs\"]. By default, it will be [var.service_name]."
+  description = <<-EOF
+    A list of A records the BookStack application will be accessible at.
+    E.g. ["wiki"] or ["bookstack", "docs"].
+    By default, it will be [var.service_name].
+  EOF
   type        = list(string)
   default     = null
 }
@@ -155,13 +159,30 @@ variable "service_name" {
 }
 
 variable "smtp_credentials_secret" {
-  description = "AWS secret name with SMTP credentials. The secret must contain a JSON with user and password keys."
+  description = <<-EOF
+    AWS secret name with SMTP credentials.
+    The secret must contain a JSON with user and password keys.
+  EOF
   type        = string
   default     = null
 }
 
 variable "storage_encryption_key_arn" {
-  description = "KMS key ARN to encrypt RDS instance storage."
+  description = <<-EOF
+    KMS key ARN to encrypt RDS instance storage.
+    If not provided, AWS managed key will be used.
+    RDS encryption is always enabled.
+  EOF
+  type        = string
+  default     = null
+}
+
+variable "efs_encryption_key_arn" {
+  description = <<-EOF
+    KMS key ARN to encrypt EFS file system.
+    If not provided, AWS managed key will be used.
+    EFS encryption is always enabled.
+  EOF
   type        = string
   default     = null
 }
@@ -190,7 +211,10 @@ variable "sns_topic_alarm_arn" {
 }
 
 variable "extra_instance_profile_permissions" {
-  description = "A JSON with a permissions policy document. The policy will be attached to the ASG instance profile."
+  description = <<-EOF
+    A JSON with a permissions policy document.
+    The policy will be attached to the ASG instance profile.
+  EOF
   type        = string
   default     = null
 }
@@ -207,14 +231,86 @@ variable "skip_final_snapshot" {
   default     = false
 }
 
-variable "efs_encrypted" {
-  description = "Whether to enable encryption for the EFS file system."
+# Alarm and Monitoring Variables
+
+variable "alarm_emails" {
+  description = <<-EOF
+    List of email addresses to receive alarm notifications for SES bounce rate, RDS issues, etc.
+    AWS will send confirmation emails that must be accepted.
+    At least one email is required.
+  EOF
+  type        = list(string)
+
+  validation {
+    condition     = length(var.alarm_emails) > 0
+    error_message = "At least one email address must be provided for alarm notifications"
+  }
+
+  validation {
+    condition = alltrue([
+      for email in var.alarm_emails :
+      can(regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", email))
+    ])
+    error_message = "All alarm_emails must be valid email addresses"
+  }
+}
+
+variable "alarm_topic_arns" {
+  description = <<-EOF
+    List of existing SNS topic ARNs to send alarms to.
+    Use for advanced integrations like PagerDuty, Slack, etc.
+  EOF
+  type        = list(string)
+  default     = []
+}
+
+variable "sns_topic_name" {
+  description = "Name for the SNS topic. If not provided, defaults to '<service_name>-alarms'"
+  type        = string
+  default     = null
+}
+
+variable "enable_ses_alarms" {
+  description = "Enable CloudWatch alarms for SES bounce/complaint rates"
   type        = bool
   default     = true
 }
 
-variable "efs_kms_key_id" {
-  description = "KMS key ID to use for EFS encryption. If not specified, AWS will use the default AWS managed key for EFS."
-  type        = string
-  default     = null
+variable "ses_bounce_rate_threshold" {
+  description = "SES bounce rate percentage threshold (AWS recommends keeping below 5%)"
+  type        = number
+  default     = 0.05
+
+  validation {
+    condition     = var.ses_bounce_rate_threshold >= 0 && var.ses_bounce_rate_threshold <= 1
+    error_message = "Bounce rate threshold must be between 0 and 1 (e.g., 0.05 for 5%)"
+  }
+}
+
+variable "ses_complaint_rate_threshold" {
+  description = "SES complaint rate percentage threshold (AWS recommends keeping below 0.1%)"
+  type        = number
+  default     = 0.001
+
+  validation {
+    condition     = var.ses_complaint_rate_threshold >= 0 && var.ses_complaint_rate_threshold <= 1
+    error_message = "Complaint rate threshold must be between 0 and 1 (e.g., 0.001 for 0.1%)"
+  }
+}
+
+variable "enable_rds_alarms" {
+  description = "Enable CloudWatch alarms for RDS metrics"
+  type        = bool
+  default     = true
+}
+
+variable "smtp_key_rotation_days" {
+  description = "Number of days between SMTP credential rotations"
+  type        = number
+  default     = 45
+
+  validation {
+    condition     = var.smtp_key_rotation_days >= 30 && var.smtp_key_rotation_days <= 90
+    error_message = "Rotation period must be between 30 and 90 days per AWS best practices"
+  }
 }

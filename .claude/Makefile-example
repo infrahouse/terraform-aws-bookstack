@@ -10,8 +10,10 @@ for line in sys.stdin:
         print("%-40s %s" % (target, help))
 endef
 export PRINT_HELP_PYSCRIPT
+
 TEST_REGION="us-west-2"
-TEST_ROLE="arn:aws:iam::303467602807:role/bookstack-tester"
+TEST_ROLE="arn:aws:iam::303467602807:role/openvpn-tester"
+TEST_SELECTOR="aws6"
 
 help: install-hooks
 	@python -c "$$PRINT_HELP_PYSCRIPT" < Makefile
@@ -23,14 +25,9 @@ install-hooks:  ## Install repo hooks
 	@test -L .git/hooks/pre-commit || ln -fs ../../hooks/pre-commit .git/hooks/pre-commit
 	@chmod +x .git/hooks/pre-commit
 
-.PHONY: lint
-lint:  ## Run code style checks
-	terraform fmt --check -recursive
 
 .PHONY: test
 test:  ## Run tests on the module
-	rm -f test_data/test_module/.terraform.lock.hcl
-	#rm -rf test_data/test_module/.terraform
 	pytest -xvvs tests/
 
 .PHONY: test-keep
@@ -38,23 +35,28 @@ test-keep:  ## Run a test and keep resources
 	pytest -xvvs \
 		--aws-region=${TEST_REGION} \
 		--test-role-arn=${TEST_ROLE} \
+		-k $(TEST_SELECTOR) \
 		--keep-after \
-		-k aws-6 \
-		tests/test_module.py
+		tests/test_module.py 2>&1 | tee pytest-$(shell date +%Y%m%d-%H%M%S)-output.log
 
 .PHONY: test-clean
 test-clean:  ## Run a test and destroy resources
 	pytest -xvvs \
 		--aws-region=${TEST_REGION} \
 		--test-role-arn=${TEST_ROLE} \
-		-k aws-6 \
-		tests/test_module.py
+		-k $(TEST_SELECTOR) \
+		tests/test_module.py 2>&1 | tee pytest-$(shell date +%Y%m%d-%H%M%S)-output.log
 
+.PHONY: lint
+lint:  ## Check code style
+	yamllint \
+		.github/workflows
+	terraform fmt -check -recursive
 
 .PHONY: bootstrap
-bootstrap: install-hooks ## bootstrap the development environment
-	pip install -U "pip ~= 23.1"
-	pip install -U "setuptools ~= 68.0"
+bootstrap: ## bootstrap the development environment
+	pip install -U "pip ~= 25.2"
+	pip install -U "setuptools ~= 80.9"
 	pip install -r requirements.txt
 
 .PHONY: clean
@@ -69,7 +71,7 @@ fmt: format
 format:  ## Use terraform fmt to format all files in the repo
 	@echo "Formatting terraform files"
 	terraform fmt -recursive
-	black tests
+	black tests portal
 
 define BROWSER_PYSCRIPT
 import os, webbrowser, sys
