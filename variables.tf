@@ -40,7 +40,11 @@ variable "db_instance_type" {
 }
 
 variable "dns_a_records" {
-  description = "A list of A records the BookStack application will be accessible at. E.g. [\"wiki\"] or [\"bookstack\", \"docs\"]. By default, it will be [var.service_name]."
+  description = <<-EOF
+    A list of A records the BookStack application will be accessible at.
+    E.g. ["wiki"] or ["bookstack", "docs"].
+    By default, it will be [var.service_name].
+  EOF
   type        = list(string)
   default     = null
 }
@@ -155,19 +159,30 @@ variable "service_name" {
 }
 
 variable "smtp_credentials_secret" {
-  description = "AWS secret name with SMTP credentials. The secret must contain a JSON with user and password keys."
+  description = <<-EOF
+    AWS secret name with SMTP credentials.
+    The secret must contain a JSON with user and password keys.
+  EOF
   type        = string
   default     = null
 }
 
 variable "storage_encryption_key_arn" {
-  description = "KMS key ARN to encrypt RDS instance storage. If not provided, AWS managed key will be used. RDS encryption is always enabled."
+  description = <<-EOF
+    KMS key ARN to encrypt RDS instance storage.
+    If not provided, AWS managed key will be used.
+    RDS encryption is always enabled.
+  EOF
   type        = string
   default     = null
 }
 
 variable "efs_encryption_key_arn" {
-  description = "KMS key ARN to encrypt EFS file system. If not provided, AWS managed key will be used. EFS encryption is always enabled."
+  description = <<-EOF
+    KMS key ARN to encrypt EFS file system.
+    If not provided, AWS managed key will be used.
+    EFS encryption is always enabled.
+  EOF
   type        = string
   default     = null
 }
@@ -196,7 +211,10 @@ variable "sns_topic_alarm_arn" {
 }
 
 variable "extra_instance_profile_permissions" {
-  description = "A JSON with a permissions policy document. The policy will be attached to the ASG instance profile."
+  description = <<-EOF
+    A JSON with a permissions policy document.
+    The policy will be attached to the ASG instance profile.
+  EOF
   type        = string
   default     = null
 }
@@ -216,7 +234,11 @@ variable "skip_final_snapshot" {
 # Alarm and Monitoring Variables
 
 variable "alarm_emails" {
-  description = "List of email addresses to receive alarm notifications for SES bounce rate, RDS issues, etc. AWS will send confirmation emails that must be accepted. At least one email is required."
+  description = <<-EOF
+    List of email addresses to receive alarm notifications for SES bounce rate, RDS issues, etc.
+    AWS will send confirmation emails that must be accepted.
+    At least one email is required.
+  EOF
   type        = list(string)
 
   validation {
@@ -234,7 +256,10 @@ variable "alarm_emails" {
 }
 
 variable "alarm_topic_arns" {
-  description = "List of existing SNS topic ARNs to send alarms to (for advanced integrations like PagerDuty, Slack, etc.)"
+  description = <<-EOF
+    List of existing SNS topic ARNs to send alarms to.
+    Use for advanced integrations like PagerDuty, Slack, etc.
+  EOF
   type        = list(string)
   default     = []
 }

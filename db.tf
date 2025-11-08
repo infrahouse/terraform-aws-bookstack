@@ -21,7 +21,12 @@ resource "aws_db_instance" "db" {
   vpc_security_group_ids = [
     aws_security_group.db.id
   ]
-  tags = local.tags
+  tags = merge(
+    local.tags,
+    {
+      module_version : local.module_version
+    }
+  )
 }
 
 resource "aws_db_subnet_group" "db" {

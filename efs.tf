@@ -1,12 +1,7 @@
-data "aws_kms_key" "efs_default" {
-  count  = var.efs_encrypted && var.efs_kms_key_id == null ? 1 : 0
-  key_id = "alias/aws/elasticfilesystem"
-}
-
 resource "aws_efs_file_system" "bookstack-uploads" {
   creation_token = "bookstack-uploads"
   encrypted      = true
-  kms_key_id     = var.efs_encryption_key_arn # If null, AWS uses default managed key
+  kms_key_id     = var.efs_encryption_key_arn # If null, AWS automatically uses aws/elasticfilesystem managed key
   tags = merge(
     {
       Name = "bookstack-uploads"
