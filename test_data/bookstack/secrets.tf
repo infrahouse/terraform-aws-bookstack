@@ -1,6 +1,6 @@
 module "google_client" {
   source             = "infrahouse/secret/aws"
-  version            = "1.0.2"
+  version            = "1.1.0"
   secret_description = "A JSON with Google OAuth Client ID"
   secret_name_prefix = "google_client"
   environment        = "development"

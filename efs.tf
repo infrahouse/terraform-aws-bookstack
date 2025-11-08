@@ -1,3 +1,8 @@
+data "aws_kms_key" "efs_default" {
+  count  = var.efs_encrypted && var.efs_kms_key_id == null ? 1 : 0
+  key_id = "alias/aws/elasticfilesystem"
+}
+
 resource "aws_efs_file_system" "bookstack-uploads" {
   creation_token = "bookstack-uploads"
   encrypted      = true
