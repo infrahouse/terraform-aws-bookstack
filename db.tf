@@ -26,9 +26,10 @@ resource "aws_db_instance" "db" {
   enabled_cloudwatch_logs_exports = var.enable_rds_cloudwatch_logs ? ["error", "general", "slowquery"] : []
 
   # Performance Insights
-  performance_insights_enabled          = var.enable_rds_performance_insights
-  performance_insights_kms_key_id       = var.enable_rds_performance_insights ? var.storage_encryption_key_arn : null
-  performance_insights_retention_period = var.enable_rds_performance_insights ? var.rds_performance_insights_retention_days : null
+  # Automatically disabled for instance types that don't support it (see locals.tf)
+  performance_insights_enabled          = local.performance_insights_enabled
+  performance_insights_kms_key_id       = local.performance_insights_enabled ? var.storage_encryption_key_arn : null
+  performance_insights_retention_period = local.performance_insights_enabled ? var.rds_performance_insights_retention_days : null
 
   tags = merge(
     local.tags,

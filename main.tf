@@ -13,10 +13,20 @@ module "bookstack-userdata" {
   packages = concat(
     var.packages,
     [
+      "mysql-client",
       "nfs-common"
     ]
   )
-  extra_files = var.extra_files
+  extra_files = concat(
+    var.extra_files,
+    [
+      {
+        content     = templatefile("${path.module}/files/test-db-connectivity.sh", {})
+        path        = "/usr/local/bin/test-db-connectivity.sh"
+        permissions = "0755"
+      }
+    ]
+  )
   extra_repos = var.extra_repos
 
   custom_facts = merge(
@@ -26,6 +36,7 @@ module "bookstack-userdata" {
         "app_key_secret" : module.bookstack_app_key.secret_name
         "app_url" : "https://${var.service_name}.${data.aws_route53_zone.current.name}"
         "db_host" : aws_db_instance.db.address
+        "db_port" : aws_db_instance.db.port
         "db_database" : aws_db_instance.db.db_name
         "db_username" : jsondecode(module.db_user.secret_value)["user"]
         "db_password_secret" : module.db_user.secret_name
@@ -50,6 +61,10 @@ module "bookstack-userdata" {
       }
     } : {}
   )
+
+  post_runcmd = [
+    "touch /tmp/puppet-done"
+  ]
 }
 
 module "bookstack" {

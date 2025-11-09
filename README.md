@@ -423,9 +423,14 @@ Apache 2.0 Licensed. See LICENSE for full details.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_autoscaling_group_name"></a> [autoscaling\_group\_name](#output\_autoscaling\_group\_name) | Name of the Auto Scaling Group for BookStack instances |
 | <a name="output_bookstack_instance_role_arn"></a> [bookstack\_instance\_role\_arn](#output\_bookstack\_instance\_role\_arn) | IAM role ARN assigned to bookstack EC2 instances. |
 | <a name="output_bookstack_load_balancer_arn"></a> [bookstack\_load\_balancer\_arn](#output\_bookstack\_load\_balancer\_arn) | ARN of the load balancer for the BookStack website pod. |
 | <a name="output_bookstack_urls"></a> [bookstack\_urls](#output\_bookstack\_urls) | List of URLs where bookstack is available. |
+| <a name="output_database_address"></a> [database\_address](#output\_database\_address) | Address of the RDS database instance |
+| <a name="output_database_name"></a> [database\_name](#output\_database\_name) | Name of the database |
+| <a name="output_database_port"></a> [database\_port](#output\_database\_port) | Port of the RDS database instance |
+| <a name="output_database_secret_name"></a> [database\_secret\_name](#output\_database\_secret\_name) | Name of the secret containing database credentials |
 | <a name="output_rds_instance_identifier"></a> [rds\_instance\_identifier](#output\_rds\_instance\_identifier) | Identifier of the RDS instance. |
 | <a name="output_smtp_credentials_last_rotated"></a> [smtp\_credentials\_last\_rotated](#output\_smtp\_credentials\_last\_rotated) | When SMTP credentials were last rotated (creation date of current key) |
 | <a name="output_smtp_credentials_next_rotation"></a> [smtp\_credentials\_next\_rotation](#output\_smtp\_credentials\_next\_rotation) | Next SMTP credential rotation date (RFC3339 format) |
