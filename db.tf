@@ -1,6 +1,6 @@
 resource "aws_db_instance" "db" {
   instance_class            = var.db_instance_type
-  identifier_prefix         = "${var.service_name}-encrypted"
+  identifier                = local.db_identifier
   allocated_storage         = 10
   max_allocated_storage     = 100
   db_name                   = var.service_name
@@ -21,12 +21,27 @@ resource "aws_db_instance" "db" {
   vpc_security_group_ids = [
     aws_security_group.db.id
   ]
+
+  # CloudWatch Logs Export
+  enabled_cloudwatch_logs_exports = var.enable_rds_cloudwatch_logs ? ["error", "general", "slowquery"] : []
+
+  # Performance Insights
+  # Automatically disabled for instance types that don't support it (see locals.tf)
+  performance_insights_enabled          = local.performance_insights_enabled
+  performance_insights_kms_key_id       = local.performance_insights_enabled ? var.storage_encryption_key_arn : null
+  performance_insights_retention_period = local.performance_insights_enabled ? var.rds_performance_insights_retention_days : null
+
   tags = merge(
     local.tags,
     {
       module_version : local.module_version
     }
   )
+  depends_on = [
+    aws_cloudwatch_log_group.rds_error,
+    aws_cloudwatch_log_group.rds_general,
+    aws_cloudwatch_log_group.rds_slowquery
+  ]
 }
 
 resource "aws_db_subnet_group" "db" {

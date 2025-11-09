@@ -30,7 +30,9 @@ This module deploys a highly available BookStack installation on AWS with:
 ### Monitoring & Alerting
 - **Email Notifications**: SNS topic with email subscriptions for all alarms
 - **SES Reputation Monitoring**: CloudWatch alarms for bounce rate (5%) and complaint rate (0.1%)
-- **RDS Health Monitoring**: Alarms for CPU utilization, storage space, and connection count
+- **RDS Health Monitoring**: Alarms for CPU utilization, storage space, and connection count (all thresholds configurable)
+- **RDS CloudWatch Logs**: Error, general, and slow query logs exported to CloudWatch (365-day retention by default)
+- **Performance Insights**: Advanced RDS performance monitoring enabled by default (7-day free tier retention)
 - **Integration Ready**: Support for external SNS topics (PagerDuty, Slack, etc.)
 
 ### High Availability
@@ -153,7 +155,15 @@ module "bookstack" {
   # Custom Alarm Thresholds
   ses_bounce_rate_threshold    = 0.03   # 3% instead of default 5%
   ses_complaint_rate_threshold = 0.0005 # 0.05% instead of default 0.1%
-  enable_rds_alarms            = true
+  rds_cpu_threshold            = 70     # 70% instead of default 80%
+  rds_storage_threshold_gb     = 10     # 10GB instead of default 5GB
+  rds_connections_threshold    = 100    # 100 connections instead of default 80
+
+  # RDS Monitoring Configuration
+  enable_rds_cloudwatch_logs              = true
+  rds_cloudwatch_logs_retention_days      = 731  # 2 years instead of default 1 year
+  enable_rds_performance_insights         = true
+  rds_performance_insights_retention_days = 731  # 2 years (additional cost) instead of 7-day free tier
 
   # Google OAuth
   google_oauth_client_secret = "google-oauth-bookstack"
@@ -176,8 +186,35 @@ module "bookstack" {
 1. **`alarm_emails` is now REQUIRED**: You must provide at least one email address for alarm notifications
 2. **Encryption Always Enabled**: RDS and EFS encryption is now mandatory (was optional in v2.x)
 3. **EFS Data Migration**: Upgrading from v2.x will recreate the EFS filesystem - **backup your data first!**
+4. **⚠️ RDS Identifier Change**: The module now uses fixed `identifier` instead of `identifier_prefix` to prevent CloudWatch log group race conditions. **Requires Terraform state manipulation to avoid database recreation** - see migration instructions below.
 
 ### Upgrading from v2.x
+
+#### RDS Identifier Migration (CRITICAL - Do this first!)
+
+The module now uses a fixed `identifier` instead of `identifier_prefix`. To avoid recreating your RDS instance:
+
+```bash
+# 1. Get your current RDS identifier from Terraform state
+terraform state show 'module.bookstack.aws_db_instance.db' | grep '^\s*identifier\s*='
+# Example output: identifier = "bookstack-encrypted20251109012345678900000001"
+
+# 2. Add the exact identifier to your Terraform code
+# In your module block, add:
+# db_identifier = "bookstack-encrypted20251109012345678900000001"  # Use YOUR actual identifier
+
+# 3. Run terraform plan to verify - should show no changes to RDS instance
+terraform plan
+
+# If plan shows RDS will be recreated, DO NOT APPLY. Double-check the identifier matches exactly.
+# The plan should show "No changes" for the RDS instance.
+
+# IMPORTANT: Once you set db_identifier for an existing installation, it is PERMANENT.
+# Removing it later will cause Terraform to recreate your database!
+# New installations should NOT set db_identifier - they will use the clean default.
+```
+
+#### EFS Migration (if upgrading from unencrypted EFS)
 
 If you're upgrading from v2.x and have an existing unencrypted EFS:
 
@@ -223,6 +260,7 @@ output "last_rotated" {
 3. **Google OAuth Setup**: Configure OAuth credentials in Google Cloud Console
 4. **Secrets Manager**: Store Google OAuth credentials in AWS Secrets Manager
 5. **VPC Configuration**: Ensure proper VPC, subnet, and internet gateway setup
+6. ⚠️ **TLS Private Key in Terraform State**: This module generates SSH keys using `tls_private_key` resource. The private key will be stored in Terraform state. Ensure your state backend is encrypted and access-controlled (e.g., S3 with encryption and restrictive IAM policies). For enhanced security, consider generating SSH keys externally and passing them via `key_pair_name` variable instead.
 
 ### Cost Optimization Tips
 
@@ -286,7 +324,7 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.5 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.11, < 7.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.6 |
-| <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.9 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.13 |
 | <a name="requirement_tls"></a> [tls](#requirement\_tls) | ~> 4.0 |
 
 ## Providers
@@ -296,7 +334,7 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.11, < 7.0 |
 | <a name="provider_aws.dns"></a> [aws.dns](#provider\_aws.dns) | >= 5.11, < 7.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | ~> 3.6 |
-| <a name="provider_time"></a> [time](#provider\_time) | ~> 0.9 |
+| <a name="provider_time"></a> [time](#provider\_time) | ~> 0.13 |
 | <a name="provider_tls"></a> [tls](#provider\_tls) | ~> 4.0 |
 
 ## Modules
@@ -313,6 +351,9 @@ Apache 2.0 Licensed. See LICENSE for full details.
 
 | Name | Type |
 |------|------|
+| [aws_cloudwatch_log_group.rds_error](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_group.rds_general](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_group.rds_slowquery](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_metric_alarm.rds_connections](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_cloudwatch_metric_alarm.rds_cpu](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_cloudwatch_metric_alarm.rds_storage](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
@@ -365,11 +406,14 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | <a name="input_asg_max_size"></a> [asg\_max\_size](#input\_asg\_max\_size) | Maximum number of instances in ASG | `number` | `null` | no |
 | <a name="input_asg_min_size"></a> [asg\_min\_size](#input\_asg\_min\_size) | Minimum number of instances in ASG | `number` | `null` | no |
 | <a name="input_backend_subnet_ids"></a> [backend\_subnet\_ids](#input\_backend\_subnet\_ids) | List of subnet ids where the webserver and database instances will be created | `list(string)` | n/a | yes |
+| <a name="input_db_identifier"></a> [db\_identifier](#input\_db\_identifier) | RDS instance identifier. If not provided, defaults to var.service\_name-encrypted.<br/><br/>MIGRATION ONLY: Set this to your existing RDS identifier when upgrading from v2.x.<br/>Once set, this value is PERMANENT - removing it will cause database recreation.<br/><br/>New installations should NOT set this variable - use the default instead. | `string` | `null` | no |
 | <a name="input_db_instance_type"></a> [db\_instance\_type](#input\_db\_instance\_type) | Instance type to run the database instances | `string` | `"db.t3.micro"` | no |
 | <a name="input_deletion_protection"></a> [deletion\_protection](#input\_deletion\_protection) | Specifies whether to enable deletion protection for the DB instance. | `bool` | `true` | no |
 | <a name="input_dns_a_records"></a> [dns\_a\_records](#input\_dns\_a\_records) | A list of A records the BookStack application will be accessible at.<br/>E.g. ["wiki"] or ["bookstack", "docs"].<br/>By default, it will be [var.service\_name]. | `list(string)` | `null` | no |
 | <a name="input_efs_encryption_key_arn"></a> [efs\_encryption\_key\_arn](#input\_efs\_encryption\_key\_arn) | KMS key ARN to encrypt EFS file system.<br/>If not provided, AWS managed key will be used.<br/>EFS encryption is always enabled. | `string` | `null` | no |
 | <a name="input_enable_rds_alarms"></a> [enable\_rds\_alarms](#input\_enable\_rds\_alarms) | Enable CloudWatch alarms for RDS metrics | `bool` | `true` | no |
+| <a name="input_enable_rds_cloudwatch_logs"></a> [enable\_rds\_cloudwatch\_logs](#input\_enable\_rds\_cloudwatch\_logs) | Enable CloudWatch logs export for RDS.<br/>Exports error, general, and slow query logs to CloudWatch. | `bool` | `true` | no |
+| <a name="input_enable_rds_performance_insights"></a> [enable\_rds\_performance\_insights](#input\_enable\_rds\_performance\_insights) | Enable Performance Insights for RDS.<br/>Provides advanced database performance monitoring and analysis. | `bool` | `true` | no |
 | <a name="input_enable_ses_alarms"></a> [enable\_ses\_alarms](#input\_enable\_ses\_alarms) | Enable CloudWatch alarms for SES bounce/complaint rates | `bool` | `true` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Name of environment. | `string` | `"development"` | no |
 | <a name="input_extra_files"></a> [extra\_files](#input\_extra\_files) | Additional files to create on an instance. | <pre>list(<br/>    object(<br/>      {<br/>        content     = string<br/>        path        = string<br/>        permissions = string<br/>      }<br/>    )<br/>  )</pre> | `[]` | no |
@@ -385,6 +429,11 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | <a name="input_puppet_hiera_config_path"></a> [puppet\_hiera\_config\_path](#input\_puppet\_hiera\_config\_path) | Path to hiera configuration file. | `string` | `"{root_directory}/environments/{environment}/hiera.yaml"` | no |
 | <a name="input_puppet_module_path"></a> [puppet\_module\_path](#input\_puppet\_module\_path) | Path to common puppet modules. | `string` | `"{root_directory}/modules"` | no |
 | <a name="input_puppet_root_directory"></a> [puppet\_root\_directory](#input\_puppet\_root\_directory) | Path where the puppet code is hosted. | `string` | `"/opt/puppet-code"` | no |
+| <a name="input_rds_cloudwatch_logs_retention_days"></a> [rds\_cloudwatch\_logs\_retention\_days](#input\_rds\_cloudwatch\_logs\_retention\_days) | Number of days to retain RDS CloudWatch logs.<br/>Default is 365 days (1 year). Set to 0 for never expire.<br/>Valid values: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653 | `number` | `365` | no |
+| <a name="input_rds_connections_threshold"></a> [rds\_connections\_threshold](#input\_rds\_connections\_threshold) | RDS database connections threshold for alarms.<br/>Default is 80 - alarm triggers when connection count exceeds this value.<br/>Adjust based on your instance type's max\_connections setting. | `number` | `80` | no |
+| <a name="input_rds_cpu_threshold"></a> [rds\_cpu\_threshold](#input\_rds\_cpu\_threshold) | RDS CPU utilization percentage threshold for alarms.<br/>Default is 80% - alarm triggers when CPU exceeds this value. | `number` | `80` | no |
+| <a name="input_rds_performance_insights_retention_days"></a> [rds\_performance\_insights\_retention\_days](#input\_rds\_performance\_insights\_retention\_days) | Number of days to retain Performance Insights data.<br/>Valid values: 7 (free tier) or 731 (2 years, additional cost).<br/>Default is 7 days. | `number` | `7` | no |
+| <a name="input_rds_storage_threshold_gb"></a> [rds\_storage\_threshold\_gb](#input\_rds\_storage\_threshold\_gb) | RDS free storage space threshold in gigabytes (GB) for alarms.<br/>Default is 5GB - alarm triggers when free space drops below this value. | `number` | `5` | no |
 | <a name="input_service_name"></a> [service\_name](#input\_service\_name) | DNS hostname for the service. It's also used to name some resources like EC2 instances. | `string` | `"bookstack"` | no |
 | <a name="input_ses_bounce_rate_threshold"></a> [ses\_bounce\_rate\_threshold](#input\_ses\_bounce\_rate\_threshold) | SES bounce rate percentage threshold (AWS recommends keeping below 5%) | `number` | `0.05` | no |
 | <a name="input_ses_complaint_rate_threshold"></a> [ses\_complaint\_rate\_threshold](#input\_ses\_complaint\_rate\_threshold) | SES complaint rate percentage threshold (AWS recommends keeping below 0.1%) | `number` | `0.001` | no |
@@ -402,9 +451,14 @@ Apache 2.0 Licensed. See LICENSE for full details.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_autoscaling_group_name"></a> [autoscaling\_group\_name](#output\_autoscaling\_group\_name) | Name of the Auto Scaling Group for BookStack instances |
 | <a name="output_bookstack_instance_role_arn"></a> [bookstack\_instance\_role\_arn](#output\_bookstack\_instance\_role\_arn) | IAM role ARN assigned to bookstack EC2 instances. |
 | <a name="output_bookstack_load_balancer_arn"></a> [bookstack\_load\_balancer\_arn](#output\_bookstack\_load\_balancer\_arn) | ARN of the load balancer for the BookStack website pod. |
 | <a name="output_bookstack_urls"></a> [bookstack\_urls](#output\_bookstack\_urls) | List of URLs where bookstack is available. |
+| <a name="output_database_address"></a> [database\_address](#output\_database\_address) | Address of the RDS database instance |
+| <a name="output_database_name"></a> [database\_name](#output\_database\_name) | Name of the database |
+| <a name="output_database_port"></a> [database\_port](#output\_database\_port) | Port of the RDS database instance |
+| <a name="output_database_secret_name"></a> [database\_secret\_name](#output\_database\_secret\_name) | Name of the secret containing database credentials |
 | <a name="output_rds_instance_identifier"></a> [rds\_instance\_identifier](#output\_rds\_instance\_identifier) | Identifier of the RDS instance. |
 | <a name="output_smtp_credentials_last_rotated"></a> [smtp\_credentials\_last\_rotated](#output\_smtp\_credentials\_last\_rotated) | When SMTP credentials were last rotated (creation date of current key) |
 | <a name="output_smtp_credentials_next_rotation"></a> [smtp\_credentials\_next\_rotation](#output\_smtp\_credentials\_next\_rotation) | Next SMTP credential rotation date (RFC3339 format) |

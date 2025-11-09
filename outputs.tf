@@ -32,3 +32,28 @@ output "smtp_credentials_last_rotated" {
   description = "When SMTP credentials were last rotated (creation date of current key)"
   value       = aws_iam_access_key.emailer.create_date
 }
+
+output "autoscaling_group_name" {
+  description = "Name of the Auto Scaling Group for BookStack instances"
+  value       = module.bookstack.asg_name
+}
+
+output "database_address" {
+  description = "Address of the RDS database instance"
+  value       = aws_db_instance.db.address
+}
+
+output "database_port" {
+  description = "Port of the RDS database instance"
+  value       = aws_db_instance.db.port
+}
+
+output "database_name" {
+  description = "Name of the database"
+  value       = aws_db_instance.db.db_name
+}
+
+output "database_secret_name" {
+  description = "Name of the secret containing database credentials"
+  value       = module.db_user.secret_name
+}
