@@ -42,4 +42,11 @@ locals {
     local.rds_performance_insights_unsupported_types,
     var.db_instance_type
   )
+
+  # Calculate freeable memory threshold in bytes based on percentage of instance RAM
+  # RDS instances use EC2 instance types (db.t3.micro = t3.micro), so we look up EC2 specs
+  rds_freeable_memory_threshold_bytes = (
+    data.aws_ec2_instance_type.db.memory_size *
+    var.rds_freeable_memory_threshold_percentage / 100
+  ) * 1024 * 1024 # Convert MiB to bytes
 }

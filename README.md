@@ -30,10 +30,16 @@ This module deploys a highly available BookStack installation on AWS with:
 ### Monitoring & Alerting
 - **Email Notifications**: SNS topic with email subscriptions for all alarms
 - **SES Reputation Monitoring**: CloudWatch alarms for bounce rate (5%) and complaint rate (0.1%)
-- **RDS Health Monitoring**: Alarms for CPU utilization, storage space, and connection count (all thresholds configurable)
+- **Comprehensive RDS Monitoring**:
+  - **Core Metrics**: CPU utilization (80%), storage space (5GB), database connections (80)
+  - **Performance**: Disk queue depth (10), read/write latency (25ms)
+  - **Memory**: Freeable memory (100MB), swap usage (256MB)
+  - **Burst Credits**: CPU credit balance for t3 instances (20 credits) - prevents throttling
+  - All thresholds fully configurable
 - **RDS CloudWatch Logs**: Error, general, and slow query logs exported to CloudWatch (365-day retention by default)
 - **Performance Insights**: Advanced RDS performance monitoring enabled by default (7-day free tier retention)
 - **Integration Ready**: Support for external SNS topics (PagerDuty, Slack, etc.)
+- **Smart Alerting**: Multi-period evaluation to reduce false positives (2-3 periods for most alarms)
 
 ### High Availability
 - **Multi-AZ Database**: RDS instance with automated backups and snapshots
@@ -186,33 +192,55 @@ module "bookstack" {
 1. **`alarm_emails` is now REQUIRED**: You must provide at least one email address for alarm notifications
 2. **Encryption Always Enabled**: RDS and EFS encryption is now mandatory (was optional in v2.x)
 3. **EFS Data Migration**: Upgrading from v2.x will recreate the EFS filesystem - **backup your data first!**
-4. **⚠️ RDS Identifier Change**: The module now uses fixed `identifier` instead of `identifier_prefix` to prevent CloudWatch log group race conditions. **Requires Terraform state manipulation to avoid database recreation** - see migration instructions below.
+4. **⚠️ RDS Identifier Change**: The module now uses fixed `identifier` instead of `identifier_prefix` to prevent CloudWatch log group race conditions. **Causes brief downtime during in-place rename** (can be avoided with `db_identifier` variable) - see migration instructions below.
 
 ### Upgrading from v2.x
 
-#### RDS Identifier Migration (CRITICAL - Do this first!)
+#### RDS Identifier Migration
 
-The module now uses a fixed `identifier` instead of `identifier_prefix`. To avoid recreating your RDS instance:
+The module now uses a fixed `identifier` instead of `identifier_prefix`. **Good news: AWS RDS allows in-place identifier changes!**
+
+You have two options when upgrading:
+
+**Option 1: Let the identifier change (Recommended)**
 
 ```bash
-# 1. Get your current RDS identifier from Terraform state
+# Just upgrade - Terraform will rename the identifier in-place
+# Old: bookstack-encrypted20251109012345678900000001
+# New: bookstack-encrypted
+
+terraform plan  # Review the identifier change
+terraform apply # Apply the change
+
+# ⚠️ IMPORTANT: This causes brief RDS downtime during the rename
+# AWS will reboot the instance to apply the new identifier
+# Plan this during a maintenance window
+```
+
+**Option 2: Keep the old identifier (Avoid downtime)**
+
+If you cannot tolerate any downtime:
+
+```bash
+# 1. Get your current RDS identifier
 terraform state show 'module.bookstack.aws_db_instance.db' | grep '^\s*identifier\s*='
 # Example output: identifier = "bookstack-encrypted20251109012345678900000001"
 
-# 2. Add the exact identifier to your Terraform code
-# In your module block, add:
-# db_identifier = "bookstack-encrypted20251109012345678900000001"  # Use YOUR actual identifier
+# 2. Set db_identifier in your module configuration
+module "bookstack" {
+  # ... other config ...
+  db_identifier = "bookstack-encrypted20251109012345678900000001"  # Use YOUR actual identifier
+}
 
-# 3. Run terraform plan to verify - should show no changes to RDS instance
-terraform plan
+# 3. Verify no changes to RDS
+terraform plan  # Should show no identifier change
 
-# If plan shows RDS will be recreated, DO NOT APPLY. Double-check the identifier matches exactly.
-# The plan should show "No changes" for the RDS instance.
-
-# IMPORTANT: Once you set db_identifier for an existing installation, it is PERMANENT.
-# Removing it later will cause Terraform to recreate your database!
-# New installations should NOT set db_identifier - they will use the clean default.
+# ⚠️ WARNING: Once you set db_identifier, it is PERMANENT!
+# Removing it later will trigger an identifier change and cause downtime
+# This option locks in the old naming pattern forever
 ```
+
+**Recommendation:** Choose Option 1 for clean naming. The brief downtime is worth having a clean, predictable identifier.
 
 #### EFS Migration (if upgrading from unencrypted EFS)
 
@@ -356,7 +384,13 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | [aws_cloudwatch_log_group.rds_slowquery](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_metric_alarm.rds_connections](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_cloudwatch_metric_alarm.rds_cpu](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
+| [aws_cloudwatch_metric_alarm.rds_cpu_credit_balance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
+| [aws_cloudwatch_metric_alarm.rds_disk_queue_depth](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
+| [aws_cloudwatch_metric_alarm.rds_freeable_memory](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
+| [aws_cloudwatch_metric_alarm.rds_read_latency](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_cloudwatch_metric_alarm.rds_storage](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
+| [aws_cloudwatch_metric_alarm.rds_swap_usage](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
+| [aws_cloudwatch_metric_alarm.rds_write_latency](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_cloudwatch_metric_alarm.ses_bounce_rate](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_cloudwatch_metric_alarm.ses_complaint_rate](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_db_instance.db](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance) | resource |
@@ -385,6 +419,7 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | [aws_ami.ubuntu_pro](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
 | [aws_availability_zones.available](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/availability_zones) | data source |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_ec2_instance_type.db](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ec2_instance_type) | data source |
 | [aws_iam_policy_document.emailer_permissions](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.instance_permissions](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
@@ -406,13 +441,15 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | <a name="input_asg_max_size"></a> [asg\_max\_size](#input\_asg\_max\_size) | Maximum number of instances in ASG | `number` | `null` | no |
 | <a name="input_asg_min_size"></a> [asg\_min\_size](#input\_asg\_min\_size) | Minimum number of instances in ASG | `number` | `null` | no |
 | <a name="input_backend_subnet_ids"></a> [backend\_subnet\_ids](#input\_backend\_subnet\_ids) | List of subnet ids where the webserver and database instances will be created | `list(string)` | n/a | yes |
-| <a name="input_db_identifier"></a> [db\_identifier](#input\_db\_identifier) | RDS instance identifier. If not provided, defaults to var.service\_name-encrypted.<br/><br/>MIGRATION ONLY: Set this to your existing RDS identifier when upgrading from v2.x.<br/>Once set, this value is PERMANENT - removing it will cause database recreation.<br/><br/>New installations should NOT set this variable - use the default instead. | `string` | `null` | no |
+| <a name="input_db_identifier"></a> [db\_identifier](#input\_db\_identifier) | RDS instance identifier. If not provided, defaults to '{var.service\_name}-encrypted'.<br/><br/>DOWNTIME AVOIDANCE: When upgrading from v2.x, RDS will rename the identifier in-place<br/>(brief downtime). To prevent this, set this variable to your existing identifier.<br/><br/>WARNING: Once set, this value is PERMANENT - removing it will trigger the rename.<br/><br/>Most users should leave this unset and accept the brief downtime for clean naming. | `string` | `null` | no |
 | <a name="input_db_instance_type"></a> [db\_instance\_type](#input\_db\_instance\_type) | Instance type to run the database instances | `string` | `"db.t3.micro"` | no |
 | <a name="input_deletion_protection"></a> [deletion\_protection](#input\_deletion\_protection) | Specifies whether to enable deletion protection for the DB instance. | `bool` | `true` | no |
 | <a name="input_dns_a_records"></a> [dns\_a\_records](#input\_dns\_a\_records) | A list of A records the BookStack application will be accessible at.<br/>E.g. ["wiki"] or ["bookstack", "docs"].<br/>By default, it will be [var.service\_name]. | `list(string)` | `null` | no |
 | <a name="input_efs_encryption_key_arn"></a> [efs\_encryption\_key\_arn](#input\_efs\_encryption\_key\_arn) | KMS key ARN to encrypt EFS file system.<br/>If not provided, AWS managed key will be used.<br/>EFS encryption is always enabled. | `string` | `null` | no |
 | <a name="input_enable_rds_alarms"></a> [enable\_rds\_alarms](#input\_enable\_rds\_alarms) | Enable CloudWatch alarms for RDS metrics | `bool` | `true` | no |
+| <a name="input_enable_rds_burst_balance_alarm"></a> [enable\_rds\_burst\_balance\_alarm](#input\_enable\_rds\_burst\_balance\_alarm) | Enable CPU credit balance alarm for burstable RDS instances (t2/t3).<br/><br/>CRITICAL for t3.micro: When CPU credits reach 0, CPU is throttled to baseline (10%).<br/>This causes severe performance degradation.<br/><br/>Enable this if using t2/t3 instance classes.<br/>Disable if using non-burstable instances (m5, r5, etc). | `bool` | `true` | no |
 | <a name="input_enable_rds_cloudwatch_logs"></a> [enable\_rds\_cloudwatch\_logs](#input\_enable\_rds\_cloudwatch\_logs) | Enable CloudWatch logs export for RDS.<br/>Exports error, general, and slow query logs to CloudWatch. | `bool` | `true` | no |
+| <a name="input_enable_rds_latency_alarms"></a> [enable\_rds\_latency\_alarms](#input\_enable\_rds\_latency\_alarms) | Enable read/write latency alarms for RDS.<br/><br/>Monitors average query latency. High latency indicates:<br/>- I/O bottlenecks<br/>- Insufficient instance resources<br/>- Query optimization needed<br/>- Network issues | `bool` | `true` | no |
 | <a name="input_enable_rds_performance_insights"></a> [enable\_rds\_performance\_insights](#input\_enable\_rds\_performance\_insights) | Enable Performance Insights for RDS.<br/>Provides advanced database performance monitoring and analysis. | `bool` | `true` | no |
 | <a name="input_enable_ses_alarms"></a> [enable\_ses\_alarms](#input\_enable\_ses\_alarms) | Enable CloudWatch alarms for SES bounce/complaint rates | `bool` | `true` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Name of environment. | `string` | `"development"` | no |
@@ -431,9 +468,15 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | <a name="input_puppet_root_directory"></a> [puppet\_root\_directory](#input\_puppet\_root\_directory) | Path where the puppet code is hosted. | `string` | `"/opt/puppet-code"` | no |
 | <a name="input_rds_cloudwatch_logs_retention_days"></a> [rds\_cloudwatch\_logs\_retention\_days](#input\_rds\_cloudwatch\_logs\_retention\_days) | Number of days to retain RDS CloudWatch logs.<br/>Default is 365 days (1 year). Set to 0 for never expire.<br/>Valid values: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653 | `number` | `365` | no |
 | <a name="input_rds_connections_threshold"></a> [rds\_connections\_threshold](#input\_rds\_connections\_threshold) | RDS database connections threshold for alarms.<br/>Default is 80 - alarm triggers when connection count exceeds this value.<br/>Adjust based on your instance type's max\_connections setting. | `number` | `80` | no |
+| <a name="input_rds_cpu_credit_balance_threshold"></a> [rds\_cpu\_credit\_balance\_threshold](#input\_rds\_cpu\_credit\_balance\_threshold) | RDS CPU credit balance threshold for alarms (t2/t3 instances only).<br/>Default is 20 credits - alarm triggers when credit balance drops below this.<br/><br/>t3.micro accumulates credits at 12 credits/hour and can hold up to 288 credits.<br/>At 20 credits remaining, you have ~1.67 hours before throttling (if no credits earned).<br/><br/>Lower threshold = less warning time before throttling.<br/>Higher threshold = more false positives during normal bursting. | `number` | `20` | no |
 | <a name="input_rds_cpu_threshold"></a> [rds\_cpu\_threshold](#input\_rds\_cpu\_threshold) | RDS CPU utilization percentage threshold for alarms.<br/>Default is 80% - alarm triggers when CPU exceeds this value. | `number` | `80` | no |
+| <a name="input_rds_disk_queue_depth_threshold"></a> [rds\_disk\_queue\_depth\_threshold](#input\_rds\_disk\_queue\_depth\_threshold) | RDS disk queue depth threshold for alarms.<br/>Default is 10 - alarm triggers when average queue depth exceeds this value.<br/>High queue depth indicates sustained I/O bottleneck.<br/><br/>Recommendations:<br/>- 0-10: Normal operation<br/>- 10-64: Monitor - may need to upgrade storage or instance<br/>- >64: Critical - severe I/O bottleneck | `number` | `10` | no |
+| <a name="input_rds_freeable_memory_threshold_percentage"></a> [rds\_freeable\_memory\_threshold\_percentage](#input\_rds\_freeable\_memory\_threshold\_percentage) | RDS freeable memory threshold as a percentage of total instance RAM.<br/>Default is 10% - alarm triggers when free memory drops below this percentage.<br/><br/>The actual MB threshold is calculated based on the instance type:<br/>- db.t3.micro (1GB): 10% = 100MB<br/>- db.t3.small (2GB): 10% = 200MB<br/>- db.t3.medium (4GB): 10% = 400MB<br/><br/>This scales automatically when you change instance types.<br/>Low memory causes performance degradation and potential OOM kills. | `number` | `10` | no |
 | <a name="input_rds_performance_insights_retention_days"></a> [rds\_performance\_insights\_retention\_days](#input\_rds\_performance\_insights\_retention\_days) | Number of days to retain Performance Insights data.<br/>Valid values: 7 (free tier) or 731 (2 years, additional cost).<br/>Default is 7 days. | `number` | `7` | no |
+| <a name="input_rds_read_latency_threshold_ms"></a> [rds\_read\_latency\_threshold\_ms](#input\_rds\_read\_latency\_threshold\_ms) | RDS read latency threshold in milliseconds for alarms.<br/>Default is 25ms - alarm triggers when average read latency exceeds this.<br/><br/>Typical latencies:<br/>- <5ms: Excellent (SSD, good indexes)<br/>- 5-25ms: Good (normal operation)<br/>- 25-100ms: Acceptable (may need optimization)<br/>- >100ms: Poor (investigate immediately) | `number` | `25` | no |
 | <a name="input_rds_storage_threshold_gb"></a> [rds\_storage\_threshold\_gb](#input\_rds\_storage\_threshold\_gb) | RDS free storage space threshold in gigabytes (GB) for alarms.<br/>Default is 5GB - alarm triggers when free space drops below this value. | `number` | `5` | no |
+| <a name="input_rds_swap_usage_threshold_mb"></a> [rds\_swap\_usage\_threshold\_mb](#input\_rds\_swap\_usage\_threshold\_mb) | RDS swap usage threshold in megabytes (MB) for alarms.<br/>Default is 256MB - alarm triggers when swap usage exceeds this value.<br/><br/>High swap usage indicates memory pressure and will cause performance degradation.<br/>Ideally, swap usage should be 0. Any sustained swap usage is a sign to upgrade instance. | `number` | `256` | no |
+| <a name="input_rds_write_latency_threshold_ms"></a> [rds\_write\_latency\_threshold\_ms](#input\_rds\_write\_latency\_threshold\_ms) | RDS write latency threshold in milliseconds for alarms.<br/>Default is 25ms - alarm triggers when average write latency exceeds this.<br/><br/>Write latency is typically higher than read latency due to fsync requirements.<br/><br/>Typical latencies:<br/>- <10ms: Excellent<br/>- 10-25ms: Good<br/>- 25-100ms: Acceptable<br/>- >100ms: Poor (investigate immediately) | `number` | `25` | no |
 | <a name="input_service_name"></a> [service\_name](#input\_service\_name) | DNS hostname for the service. It's also used to name some resources like EC2 instances. | `string` | `"bookstack"` | no |
 | <a name="input_ses_bounce_rate_threshold"></a> [ses\_bounce\_rate\_threshold](#input\_ses\_bounce\_rate\_threshold) | SES bounce rate percentage threshold (AWS recommends keeping below 5%) | `number` | `0.05` | no |
 | <a name="input_ses_complaint_rate_threshold"></a> [ses\_complaint\_rate\_threshold](#input\_ses\_complaint\_rate\_threshold) | SES complaint rate percentage threshold (AWS recommends keeping below 0.1%) | `number` | `0.001` | no |

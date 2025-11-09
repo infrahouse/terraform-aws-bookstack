@@ -233,12 +233,14 @@ variable "skip_final_snapshot" {
 
 variable "db_identifier" {
   description = <<-EOF
-    RDS instance identifier. If not provided, defaults to var.service_name-encrypted.
+    RDS instance identifier. If not provided, defaults to '{var.service_name}-encrypted'.
 
-    MIGRATION ONLY: Set this to your existing RDS identifier when upgrading from v2.x.
-    Once set, this value is PERMANENT - removing it will cause database recreation.
+    DOWNTIME AVOIDANCE: When upgrading from v2.x, RDS will rename the identifier in-place
+    (brief downtime). To prevent this, set this variable to your existing identifier.
 
-    New installations should NOT set this variable - use the default instead.
+    WARNING: Once set, this value is PERMANENT - removing it will trigger the rename.
+
+    Most users should leave this unset and accept the brief downtime for clean naming.
   EOF
   type        = string
   default     = null
@@ -357,6 +359,155 @@ variable "rds_connections_threshold" {
   validation {
     condition     = var.rds_connections_threshold >= 0
     error_message = "Connections threshold must be a positive number"
+  }
+}
+
+variable "rds_disk_queue_depth_threshold" {
+  description = <<-EOF
+    RDS disk queue depth threshold for alarms.
+    Default is 10 - alarm triggers when average queue depth exceeds this value.
+    High queue depth indicates sustained I/O bottleneck.
+
+    Recommendations:
+    - 0-10: Normal operation
+    - 10-64: Monitor - may need to upgrade storage or instance
+    - >64: Critical - severe I/O bottleneck
+  EOF
+  type        = number
+  default     = 10
+
+  validation {
+    condition     = var.rds_disk_queue_depth_threshold >= 0
+    error_message = "Disk queue depth threshold must be a positive number"
+  }
+}
+
+variable "rds_freeable_memory_threshold_percentage" {
+  description = <<-EOF
+    RDS freeable memory threshold as a percentage of total instance RAM.
+    Default is 10% - alarm triggers when free memory drops below this percentage.
+
+    The actual MB threshold is calculated based on the instance type:
+    - db.t3.micro (1GB): 10% = 100MB
+    - db.t3.small (2GB): 10% = 200MB
+    - db.t3.medium (4GB): 10% = 400MB
+
+    This scales automatically when you change instance types.
+    Low memory causes performance degradation and potential OOM kills.
+  EOF
+  type        = number
+  default     = 10
+
+  validation {
+    condition     = var.rds_freeable_memory_threshold_percentage >= 0 && var.rds_freeable_memory_threshold_percentage <= 100
+    error_message = "Memory threshold percentage must be between 0 and 100"
+  }
+}
+
+variable "rds_swap_usage_threshold_mb" {
+  description = <<-EOF
+    RDS swap usage threshold in megabytes (MB) for alarms.
+    Default is 256MB - alarm triggers when swap usage exceeds this value.
+
+    High swap usage indicates memory pressure and will cause performance degradation.
+    Ideally, swap usage should be 0. Any sustained swap usage is a sign to upgrade instance.
+  EOF
+  type        = number
+  default     = 256
+
+  validation {
+    condition     = var.rds_swap_usage_threshold_mb >= 0
+    error_message = "Swap usage threshold must be a positive number (in MB)"
+  }
+}
+
+variable "enable_rds_burst_balance_alarm" {
+  description = <<-EOF
+    Enable CPU credit balance alarm for burstable RDS instances (t2/t3).
+
+    CRITICAL for t3.micro: When CPU credits reach 0, CPU is throttled to baseline (10%).
+    This causes severe performance degradation.
+
+    Enable this if using t2/t3 instance classes.
+    Disable if using non-burstable instances (m5, r5, etc).
+  EOF
+  type        = bool
+  default     = true # Safe default - alarm is only relevant for t2/t3
+}
+
+variable "rds_cpu_credit_balance_threshold" {
+  description = <<-EOF
+    RDS CPU credit balance threshold for alarms (t2/t3 instances only).
+    Default is 20 credits - alarm triggers when credit balance drops below this.
+
+    t3.micro accumulates credits at 12 credits/hour and can hold up to 288 credits.
+    At 20 credits remaining, you have ~1.67 hours before throttling (if no credits earned).
+
+    Lower threshold = less warning time before throttling.
+    Higher threshold = more false positives during normal bursting.
+  EOF
+  type        = number
+  default     = 20
+
+  validation {
+    condition     = var.rds_cpu_credit_balance_threshold >= 0
+    error_message = "CPU credit balance threshold must be a positive number"
+  }
+}
+
+variable "enable_rds_latency_alarms" {
+  description = <<-EOF
+    Enable read/write latency alarms for RDS.
+
+    Monitors average query latency. High latency indicates:
+    - I/O bottlenecks
+    - Insufficient instance resources
+    - Query optimization needed
+    - Network issues
+  EOF
+  type        = bool
+  default     = true
+}
+
+variable "rds_read_latency_threshold_ms" {
+  description = <<-EOF
+    RDS read latency threshold in milliseconds for alarms.
+    Default is 25ms - alarm triggers when average read latency exceeds this.
+
+    Typical latencies:
+    - <5ms: Excellent (SSD, good indexes)
+    - 5-25ms: Good (normal operation)
+    - 25-100ms: Acceptable (may need optimization)
+    - >100ms: Poor (investigate immediately)
+  EOF
+  type        = number
+  default     = 25
+
+  validation {
+    condition     = var.rds_read_latency_threshold_ms > 0
+    error_message = "Read latency threshold must be greater than 0"
+  }
+}
+
+variable "rds_write_latency_threshold_ms" {
+  description = <<-EOF
+    RDS write latency threshold in milliseconds for alarms.
+    Default is 25ms - alarm triggers when average write latency exceeds this.
+
+    Write latency is typically higher than read latency due to fsync requirements.
+
+    Typical latencies:
+    - <10ms: Excellent
+    - 10-25ms: Good
+    - 25-100ms: Acceptable
+    - >100ms: Poor (investigate immediately)
+  EOF
+  type        = number
+  default     = 25
+
+  validation {
+    condition     = var.rds_write_latency_threshold_ms > 0
+    error_message = "Write latency threshold must be greater than 0"
   }
 }
 
