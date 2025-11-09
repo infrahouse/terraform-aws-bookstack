@@ -231,6 +231,19 @@ variable "skip_final_snapshot" {
   default     = false
 }
 
+variable "db_identifier" {
+  description = <<-EOF
+    RDS instance identifier. If not provided, defaults to var.service_name-encrypted.
+
+    MIGRATION ONLY: Set this to your existing RDS identifier when upgrading from v2.x.
+    Once set, this value is PERMANENT - removing it will cause database recreation.
+
+    New installations should NOT set this variable - use the default instead.
+  EOF
+  type        = string
+  default     = null
+}
+
 # Alarm and Monitoring Variables
 
 variable "alarm_emails" {

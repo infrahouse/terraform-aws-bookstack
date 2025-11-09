@@ -1,6 +1,6 @@
 resource "aws_db_instance" "db" {
   instance_class            = var.db_instance_type
-  identifier_prefix         = "${var.service_name}-encrypted"
+  identifier                = local.db_identifier
   allocated_storage         = 10
   max_allocated_storage     = 100
   db_name                   = var.service_name

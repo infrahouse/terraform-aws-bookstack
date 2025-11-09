@@ -5,7 +5,7 @@
 resource "aws_cloudwatch_log_group" "rds_error" {
   count = var.enable_rds_cloudwatch_logs ? 1 : 0
 
-  name              = "/aws/rds/instance/${aws_db_instance.db.identifier}/error"
+  name              = "/aws/rds/instance/${local.db_identifier}/error"
   retention_in_days = var.rds_cloudwatch_logs_retention_days
 
   tags = merge(
@@ -19,7 +19,7 @@ resource "aws_cloudwatch_log_group" "rds_error" {
 resource "aws_cloudwatch_log_group" "rds_general" {
   count = var.enable_rds_cloudwatch_logs ? 1 : 0
 
-  name              = "/aws/rds/instance/${aws_db_instance.db.identifier}/general"
+  name              = "/aws/rds/instance/${local.db_identifier}/general"
   retention_in_days = var.rds_cloudwatch_logs_retention_days
 
   tags = merge(
@@ -33,7 +33,7 @@ resource "aws_cloudwatch_log_group" "rds_general" {
 resource "aws_cloudwatch_log_group" "rds_slowquery" {
   count = var.enable_rds_cloudwatch_logs ? 1 : 0
 
-  name              = "/aws/rds/instance/${aws_db_instance.db.identifier}/slowquery"
+  name              = "/aws/rds/instance/${local.db_identifier}/slowquery"
   retention_in_days = var.rds_cloudwatch_logs_retention_days
 
   tags = merge(

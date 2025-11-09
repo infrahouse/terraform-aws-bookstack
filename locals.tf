@@ -1,5 +1,7 @@
 locals {
   module_version = "3.0.0"
+
+  db_identifier = var.db_identifier != null ? var.db_identifier : "${var.service_name}-encrypted"
   tags = {
     created_by_module : "infrahouse/bookstack/aws"
   }

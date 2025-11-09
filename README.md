@@ -186,8 +186,35 @@ module "bookstack" {
 1. **`alarm_emails` is now REQUIRED**: You must provide at least one email address for alarm notifications
 2. **Encryption Always Enabled**: RDS and EFS encryption is now mandatory (was optional in v2.x)
 3. **EFS Data Migration**: Upgrading from v2.x will recreate the EFS filesystem - **backup your data first!**
+4. **⚠️ RDS Identifier Change**: The module now uses fixed `identifier` instead of `identifier_prefix` to prevent CloudWatch log group race conditions. **Requires Terraform state manipulation to avoid database recreation** - see migration instructions below.
 
 ### Upgrading from v2.x
+
+#### RDS Identifier Migration (CRITICAL - Do this first!)
+
+The module now uses a fixed `identifier` instead of `identifier_prefix`. To avoid recreating your RDS instance:
+
+```bash
+# 1. Get your current RDS identifier from Terraform state
+terraform state show 'module.bookstack.aws_db_instance.db' | grep '^\s*identifier\s*='
+# Example output: identifier = "bookstack-encrypted20251109012345678900000001"
+
+# 2. Add the exact identifier to your Terraform code
+# In your module block, add:
+# db_identifier = "bookstack-encrypted20251109012345678900000001"  # Use YOUR actual identifier
+
+# 3. Run terraform plan to verify - should show no changes to RDS instance
+terraform plan
+
+# If plan shows RDS will be recreated, DO NOT APPLY. Double-check the identifier matches exactly.
+# The plan should show "No changes" for the RDS instance.
+
+# IMPORTANT: Once you set db_identifier for an existing installation, it is PERMANENT.
+# Removing it later will cause Terraform to recreate your database!
+# New installations should NOT set db_identifier - they will use the clean default.
+```
+
+#### EFS Migration (if upgrading from unencrypted EFS)
 
 If you're upgrading from v2.x and have an existing unencrypted EFS:
 
@@ -379,6 +406,7 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | <a name="input_asg_max_size"></a> [asg\_max\_size](#input\_asg\_max\_size) | Maximum number of instances in ASG | `number` | `null` | no |
 | <a name="input_asg_min_size"></a> [asg\_min\_size](#input\_asg\_min\_size) | Minimum number of instances in ASG | `number` | `null` | no |
 | <a name="input_backend_subnet_ids"></a> [backend\_subnet\_ids](#input\_backend\_subnet\_ids) | List of subnet ids where the webserver and database instances will be created | `list(string)` | n/a | yes |
+| <a name="input_db_identifier"></a> [db\_identifier](#input\_db\_identifier) | RDS instance identifier. If not provided, defaults to var.service\_name-encrypted.<br/><br/>MIGRATION ONLY: Set this to your existing RDS identifier when upgrading from v2.x.<br/>Once set, this value is PERMANENT - removing it will cause database recreation.<br/><br/>New installations should NOT set this variable - use the default instead. | `string` | `null` | no |
 | <a name="input_db_instance_type"></a> [db\_instance\_type](#input\_db\_instance\_type) | Instance type to run the database instances | `string` | `"db.t3.micro"` | no |
 | <a name="input_deletion_protection"></a> [deletion\_protection](#input\_deletion\_protection) | Specifies whether to enable deletion protection for the DB instance. | `bool` | `true` | no |
 | <a name="input_dns_a_records"></a> [dns\_a\_records](#input\_dns\_a\_records) | A list of A records the BookStack application will be accessible at.<br/>E.g. ["wiki"] or ["bookstack", "docs"].<br/>By default, it will be [var.service\_name]. | `list(string)` | `null` | no |
