@@ -37,6 +37,11 @@ resource "aws_db_instance" "db" {
       module_version : local.module_version
     }
   )
+  depends_on = [
+    aws_cloudwatch_log_group.rds_error,
+    aws_cloudwatch_log_group.rds_general,
+    aws_cloudwatch_log_group.rds_slowquery
+  ]
 }
 
 resource "aws_db_subnet_group" "db" {
