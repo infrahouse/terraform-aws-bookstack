@@ -136,3 +136,187 @@ resource "aws_cloudwatch_metric_alarm" "rds_connections" {
     local.tags
   )
 }
+
+# RDS Disk Queue Depth Alarm
+# Monitors I/O performance - high queue depth indicates disk I/O bottleneck
+resource "aws_cloudwatch_metric_alarm" "rds_disk_queue_depth" {
+  count = var.enable_rds_alarms ? 1 : 0
+
+  alarm_name          = "${var.service_name}-rds-disk-queue-depth"
+  alarm_description   = "RDS disk queue depth for ${var.service_name} exceeds ${var.rds_disk_queue_depth_threshold} (sustained I/O bottleneck)"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2 # 2 consecutive periods to avoid false positives
+  metric_name         = "DiskQueueDepth"
+  namespace           = "AWS/RDS"
+  period              = 300 # 5 minutes
+  statistic           = "Average"
+  threshold           = var.rds_disk_queue_depth_threshold
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    DBInstanceIdentifier = aws_db_instance.db.identifier
+  }
+
+  alarm_actions = local.all_alarm_topic_arns
+
+  tags = merge(
+    {
+      Name = "${var.service_name}-rds-disk-queue"
+    },
+    local.tags
+  )
+}
+
+# RDS Freeable Memory Alarm
+# Critical: Low memory causes performance degradation and potential OOM
+# Threshold is calculated as percentage of instance RAM (auto-scales with instance type)
+resource "aws_cloudwatch_metric_alarm" "rds_freeable_memory" {
+  count = var.enable_rds_alarms ? 1 : 0
+
+  alarm_name = "${var.service_name}-rds-freeable-memory"
+  alarm_description = join("", [
+    "RDS freeable memory for ${var.service_name} is below ${var.rds_freeable_memory_threshold_percentage}% ",
+    "(${floor(local.rds_freeable_memory_threshold_bytes / 1024 / 1024)}MB of ${data.aws_ec2_instance_type.db.memory_size}MB total)"
+  ])
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = 2 # 2 periods to confirm sustained low memory
+  metric_name         = "FreeableMemory"
+  namespace           = "AWS/RDS"
+  period              = 300 # 5 minutes
+  statistic           = "Average"
+  threshold           = local.rds_freeable_memory_threshold_bytes
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    DBInstanceIdentifier = aws_db_instance.db.identifier
+  }
+
+  alarm_actions = local.all_alarm_topic_arns
+
+  tags = merge(
+    {
+      Name = "${var.service_name}-rds-memory"
+    },
+    local.tags
+  )
+}
+
+# RDS Swap Usage Alarm
+# High swap indicates memory pressure - performance will degrade
+resource "aws_cloudwatch_metric_alarm" "rds_swap_usage" {
+  count = var.enable_rds_alarms ? 1 : 0
+
+  alarm_name          = "${var.service_name}-rds-swap-usage"
+  alarm_description   = "RDS swap usage for ${var.service_name} exceeds ${var.rds_swap_usage_threshold_mb}MB (memory pressure)"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "SwapUsage"
+  namespace           = "AWS/RDS"
+  period              = 300
+  statistic           = "Average"
+  threshold           = var.rds_swap_usage_threshold_mb * 1024 * 1024 # Convert MB to bytes
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    DBInstanceIdentifier = aws_db_instance.db.identifier
+  }
+
+  alarm_actions = local.all_alarm_topic_arns
+
+  tags = merge(
+    {
+      Name = "${var.service_name}-rds-swap"
+    },
+    local.tags
+  )
+}
+
+# RDS CPU Credit Balance Alarm (for burstable instances like t3)
+# CRITICAL: When credits hit 0, CPU is throttled to baseline (10% for t3.micro)
+resource "aws_cloudwatch_metric_alarm" "rds_cpu_credit_balance" {
+  count = var.enable_rds_alarms && var.enable_rds_burst_balance_alarm ? 1 : 0
+
+  alarm_name          = "${var.service_name}-rds-cpu-credit-balance"
+  alarm_description   = "RDS CPU credit balance for ${var.service_name} is below ${var.rds_cpu_credit_balance_threshold} (risk of CPU throttling)"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = 1 # Alert immediately - critical for t3 instances
+  metric_name         = "CPUCreditBalance"
+  namespace           = "AWS/RDS"
+  period              = 300
+  statistic           = "Average"
+  threshold           = var.rds_cpu_credit_balance_threshold
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    DBInstanceIdentifier = aws_db_instance.db.identifier
+  }
+
+  alarm_actions = local.all_alarm_topic_arns
+
+  tags = merge(
+    {
+      Name = "${var.service_name}-rds-cpu-credits"
+    },
+    local.tags
+  )
+}
+
+# RDS Read Latency Alarm
+# High read latency indicates performance issues
+resource "aws_cloudwatch_metric_alarm" "rds_read_latency" {
+  count = var.enable_rds_alarms && var.enable_rds_latency_alarms ? 1 : 0
+
+  alarm_name          = "${var.service_name}-rds-read-latency"
+  alarm_description   = "RDS read latency for ${var.service_name} exceeds ${var.rds_read_latency_threshold_ms}ms"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 3 # 3 periods to filter transient spikes
+  metric_name         = "ReadLatency"
+  namespace           = "AWS/RDS"
+  period              = 300
+  statistic           = "Average"
+  threshold           = var.rds_read_latency_threshold_ms / 1000 # Convert ms to seconds
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    DBInstanceIdentifier = aws_db_instance.db.identifier
+  }
+
+  alarm_actions = local.all_alarm_topic_arns
+
+  tags = merge(
+    {
+      Name = "${var.service_name}-rds-read-latency"
+    },
+    local.tags
+  )
+}
+
+# RDS Write Latency Alarm
+# High write latency indicates performance issues
+resource "aws_cloudwatch_metric_alarm" "rds_write_latency" {
+  count = var.enable_rds_alarms && var.enable_rds_latency_alarms ? 1 : 0
+
+  alarm_name          = "${var.service_name}-rds-write-latency"
+  alarm_description   = "RDS write latency for ${var.service_name} exceeds ${var.rds_write_latency_threshold_ms}ms"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 3 # 3 periods to filter transient spikes
+  metric_name         = "WriteLatency"
+  namespace           = "AWS/RDS"
+  period              = 300
+  statistic           = "Average"
+  threshold           = var.rds_write_latency_threshold_ms / 1000 # Convert ms to seconds
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    DBInstanceIdentifier = aws_db_instance.db.identifier
+  }
+
+  alarm_actions = local.all_alarm_topic_arns
+
+  tags = merge(
+    {
+      Name = "${var.service_name}-rds-write-latency"
+    },
+    local.tags
+  )
+}

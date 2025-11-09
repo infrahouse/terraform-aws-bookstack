@@ -67,3 +67,9 @@ data "aws_iam_policy_document" "instance_permissions" {
 data "aws_vpc" "selected" {
   id = data.aws_subnet.selected.vpc_id
 }
+
+# Look up EC2 instance type specs to get memory size
+# RDS instance types use the same hardware as EC2 (db.t3.micro = t3.micro)
+data "aws_ec2_instance_type" "db" {
+  instance_type = replace(var.db_instance_type, "db.", "")
+}
