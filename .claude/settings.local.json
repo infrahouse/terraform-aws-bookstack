@@ -14,7 +14,8 @@
       "Bash(cat:*)",
       "WebFetch(domain:aws.amazon.com)",
       "Bash(curl:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(make help:*)"
     ],
     "deny": [],
     "ask": []
