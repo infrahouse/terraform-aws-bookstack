@@ -56,7 +56,13 @@ variable "environment" {
 }
 
 variable "extra_files" {
-  description = "Additional files to create on an instance."
+  description = <<-EOT
+    Additional files to create on an instance.
+
+    ⚠️  WARNING: Large files increase userdata size. AWS has a 16KB limit.
+    Consider storing large scripts in S3 and downloading them instead.
+    Check the userdata_size_info output after applying to monitor usage.
+  EOT
   type = list(
     object(
       {
@@ -127,7 +133,13 @@ variable "lb_subnet_ids" {
 }
 
 variable "packages" {
-  description = "List of packages to install when the instances bootstraps."
+  description = <<-EOT
+    List of packages to install when the instance bootstraps.
+
+    ⚠️  WARNING: Each package name increases userdata size. AWS has a 16KB limit.
+    The module already includes mysql-client and nfs-common by default.
+    Check the userdata_size_info output after applying to monitor usage.
+  EOT
   type        = list(string)
   default     = []
 }
@@ -571,4 +583,20 @@ variable "smtp_key_rotation_days" {
     condition     = var.smtp_key_rotation_days >= 30 && var.smtp_key_rotation_days <= 90
     error_message = "Rotation period must be between 30 and 90 days per AWS best practices"
   }
+}
+
+variable "compress_userdata" {
+  description = <<-EOT
+    Compress userdata with gzip to reduce size and work around AWS 16KB limit.
+
+    When enabled, userdata is gzip-compressed before being sent to EC2 instances.
+    AWS automatically decompresses it before execution. This can reduce userdata
+    size by 60-70%, allowing more packages, files, and configuration.
+
+    Recommended: Enable if userdata_size_info shows approaching limit (>12KB).
+
+    Requirements: gzip command must be available on the system running terraform.
+  EOT
+  type        = bool
+  default     = false
 }

@@ -297,6 +297,55 @@ output "last_rotated" {
 - Use AWS managed KMS keys (default) instead of custom keys for lower costs
 - Configure appropriate `asg_min_size` and `asg_max_size` for your workload
 
+### Userdata Size Management
+
+AWS EC2 has a 16KB limit for userdata (after base64 encoding). The module tracks userdata size and provides recommendations:
+
+#### Monitor Userdata Size
+
+After applying, check the userdata size:
+
+```bash
+terraform output userdata_size_info
+```
+
+Output example:
+```json
+{
+  "compression_enabled": false,
+  "base64_kb": "12.45",
+  "aws_limit_kb": "16.00",
+  "utilization_pct": "77.8%",
+  "status": "✓ OK",
+  "recommendation": "Size is within safe limits"
+}
+```
+
+#### Enable Compression
+
+If userdata approaches the 16KB limit (>12KB), enable compression:
+
+```hcl
+module "bookstack" {
+  source = "registry.infrahouse.com/infrahouse/bookstack/aws"
+  # ... other configuration ...
+
+  compress_userdata = true  # Enable gzip compression
+}
+```
+
+Compression typically reduces userdata size by 60-70%, allowing more packages and configuration.
+
+#### Reduce Userdata Size
+
+If compression isn't enough, consider:
+- Move large scripts to S3 and download them during boot
+- Reduce the number of packages in `var.packages`
+- Minimize content in `var.extra_files`
+- Store large configuration in Parameter Store/Secrets Manager
+
+The module automatically validates userdata size during tests and will fail if the limit is exceeded.
+
 ## Outputs
 
 The module provides several useful outputs:
@@ -441,6 +490,7 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | <a name="input_asg_max_size"></a> [asg\_max\_size](#input\_asg\_max\_size) | Maximum number of instances in ASG | `number` | `null` | no |
 | <a name="input_asg_min_size"></a> [asg\_min\_size](#input\_asg\_min\_size) | Minimum number of instances in ASG | `number` | `null` | no |
 | <a name="input_backend_subnet_ids"></a> [backend\_subnet\_ids](#input\_backend\_subnet\_ids) | List of subnet ids where the webserver and database instances will be created | `list(string)` | n/a | yes |
+| <a name="input_compress_userdata"></a> [compress\_userdata](#input\_compress\_userdata) | Compress userdata with gzip to reduce size and work around AWS 16KB limit.<br/><br/>When enabled, userdata is gzip-compressed before being sent to EC2 instances.<br/>AWS automatically decompresses it before execution. This can reduce userdata<br/>size by 60-70%, allowing more packages, files, and configuration.<br/><br/>Recommended: Enable if userdata\_size\_info shows approaching limit (>12KB).<br/><br/>Requirements: gzip command must be available on the system running terraform. | `bool` | `false` | no |
 | <a name="input_db_identifier"></a> [db\_identifier](#input\_db\_identifier) | RDS instance identifier. If not provided, defaults to '{var.service\_name}-encrypted'.<br/><br/>DOWNTIME AVOIDANCE: When upgrading from v2.x, RDS will rename the identifier in-place<br/>(brief downtime). To prevent this, set this variable to your existing identifier.<br/><br/>WARNING: Once set, this value is PERMANENT - removing it will trigger the rename.<br/><br/>Most users should leave this unset and accept the brief downtime for clean naming. | `string` | `null` | no |
 | <a name="input_db_instance_type"></a> [db\_instance\_type](#input\_db\_instance\_type) | Instance type to run the database instances | `string` | `"db.t3.micro"` | no |
 | <a name="input_deletion_protection"></a> [deletion\_protection](#input\_deletion\_protection) | Specifies whether to enable deletion protection for the DB instance. | `bool` | `true` | no |
@@ -453,7 +503,7 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | <a name="input_enable_rds_performance_insights"></a> [enable\_rds\_performance\_insights](#input\_enable\_rds\_performance\_insights) | Enable Performance Insights for RDS.<br/>Provides advanced database performance monitoring and analysis. | `bool` | `true` | no |
 | <a name="input_enable_ses_alarms"></a> [enable\_ses\_alarms](#input\_enable\_ses\_alarms) | Enable CloudWatch alarms for SES bounce/complaint rates | `bool` | `true` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Name of environment. | `string` | `"development"` | no |
-| <a name="input_extra_files"></a> [extra\_files](#input\_extra\_files) | Additional files to create on an instance. | <pre>list(<br/>    object(<br/>      {<br/>        content     = string<br/>        path        = string<br/>        permissions = string<br/>      }<br/>    )<br/>  )</pre> | `[]` | no |
+| <a name="input_extra_files"></a> [extra\_files](#input\_extra\_files) | Additional files to create on an instance.<br/><br/>⚠️  WARNING: Large files increase userdata size. AWS has a 16KB limit.<br/>Consider storing large scripts in S3 and downloading them instead.<br/>Check the userdata\_size\_info output after applying to monitor usage. | <pre>list(<br/>    object(<br/>      {<br/>        content     = string<br/>        path        = string<br/>        permissions = string<br/>      }<br/>    )<br/>  )</pre> | `[]` | no |
 | <a name="input_extra_instance_profile_permissions"></a> [extra\_instance\_profile\_permissions](#input\_extra\_instance\_profile\_permissions) | A JSON with a permissions policy document.<br/>The policy will be attached to the ASG instance profile. | `string` | `null` | no |
 | <a name="input_extra_repos"></a> [extra\_repos](#input\_extra\_repos) | Additional APT repositories to configure on an instance. | <pre>map(<br/>    object(<br/>      {<br/>        source = string<br/>        key    = string<br/>      }<br/>    )<br/>  )</pre> | `{}` | no |
 | <a name="input_google_oauth_client_secret"></a> [google\_oauth\_client\_secret](#input\_google\_oauth\_client\_secret) | AWS secretsmanager secret name with a Google Oauth 'client id' and 'client secret'. | `string` | n/a | yes |
@@ -461,7 +511,7 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | <a name="input_internet_gateway_id"></a> [internet\_gateway\_id](#input\_internet\_gateway\_id) | Not used, but AWS Internet Gateway must be present. Ensure by passing its id. | `string` | n/a | yes |
 | <a name="input_key_pair_name"></a> [key\_pair\_name](#input\_key\_pair\_name) | SSH keypair name to be deployed in EC2 instances | `string` | `null` | no |
 | <a name="input_lb_subnet_ids"></a> [lb\_subnet\_ids](#input\_lb\_subnet\_ids) | List of subnet ids where the load balancer will be created | `list(string)` | n/a | yes |
-| <a name="input_packages"></a> [packages](#input\_packages) | List of packages to install when the instances bootstraps. | `list(string)` | `[]` | no |
+| <a name="input_packages"></a> [packages](#input\_packages) | List of packages to install when the instance bootstraps.<br/><br/>⚠️  WARNING: Each package name increases userdata size. AWS has a 16KB limit.<br/>The module already includes mysql-client and nfs-common by default.<br/>Check the userdata\_size\_info output after applying to monitor usage. | `list(string)` | `[]` | no |
 | <a name="input_puppet_debug_logging"></a> [puppet\_debug\_logging](#input\_puppet\_debug\_logging) | Enable debug logging if true. | `bool` | `false` | no |
 | <a name="input_puppet_hiera_config_path"></a> [puppet\_hiera\_config\_path](#input\_puppet\_hiera\_config\_path) | Path to hiera configuration file. | `string` | `"{root_directory}/environments/{environment}/hiera.yaml"` | no |
 | <a name="input_puppet_module_path"></a> [puppet\_module\_path](#input\_puppet\_module\_path) | Path to common puppet modules. | `string` | `"{root_directory}/modules"` | no |
@@ -506,4 +556,5 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | <a name="output_smtp_credentials_last_rotated"></a> [smtp\_credentials\_last\_rotated](#output\_smtp\_credentials\_last\_rotated) | When SMTP credentials were last rotated (creation date of current key) |
 | <a name="output_smtp_credentials_next_rotation"></a> [smtp\_credentials\_next\_rotation](#output\_smtp\_credentials\_next\_rotation) | Next SMTP credential rotation date (RFC3339 format) |
 | <a name="output_sns_topic_arn"></a> [sns\_topic\_arn](#output\_sns\_topic\_arn) | ARN of the SNS topic for alarms |
+| <a name="output_userdata_size_info"></a> [userdata\_size\_info](#output\_userdata\_size\_info) | Userdata size information for launch template validation.<br/>AWS limit is 16KB (16384 bytes) after base64 encoding.<br/>If size exceeds limit, EC2 launch will fail. |
 <!-- END_TF_DOCS -->

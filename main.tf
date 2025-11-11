@@ -9,6 +9,7 @@ module "bookstack-userdata" {
   puppet_hiera_config_path = var.puppet_hiera_config_path
   puppet_module_path       = var.puppet_module_path
   ubuntu_codename          = var.ubuntu_codename
+  gzip_userdata            = var.compress_userdata
 
   packages = concat(
     var.packages,

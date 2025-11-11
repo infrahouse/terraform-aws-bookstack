@@ -197,3 +197,29 @@ def test_module(
         ), "Database connectivity test did not complete successfully"
 
         LOG.info("Database connectivity validated successfully")
+
+        # Validate userdata size to catch AWS 16KB limit issues
+        userdata_info = tf_output.get("userdata_size_info", {}).get("value", {})
+        LOG.info("Userdata size validation:")
+        LOG.info("  Compression enabled: %s", userdata_info.get("compression_enabled"))
+        LOG.info("  Base64 size: %s KB", userdata_info.get("base64_kb"))
+        LOG.info("  AWS limit: %s KB", userdata_info.get("aws_limit_kb"))
+        LOG.info("  Utilization: %s", userdata_info.get("utilization_pct"))
+        LOG.info("  Status: %s", userdata_info.get("status"))
+        LOG.info("  Recommendation: %s", userdata_info.get("recommendation"))
+
+        # Assert userdata is within AWS limits
+        base64_bytes = userdata_info.get("base64_bytes", 0)
+        assert base64_bytes <= 16384, (
+            f"Userdata exceeds AWS 16KB limit: {userdata_info.get('base64_kb')} KB. "
+            f"Status: {userdata_info.get('status')}. "
+            f"{userdata_info.get('recommendation')}"
+        )
+
+        # Warn if approaching limit (14KB = 87.5% of 16KB)
+        if base64_bytes > 14336:
+            LOG.warning(
+                "⚠️  Userdata is approaching AWS limit (%s KB / 16 KB). "
+                "Consider enabling compression (compress_userdata = true) or optimizing before adding more content.",
+                userdata_info.get("base64_kb"),
+            )
