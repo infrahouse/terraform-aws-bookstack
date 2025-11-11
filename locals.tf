@@ -1,5 +1,5 @@
 locals {
-  module_version = "3.2.0"
+  module_version = "3.3.0"
 
   db_identifier = var.db_identifier != null ? var.db_identifier : "${var.service_name}-encrypted"
   tags = {
