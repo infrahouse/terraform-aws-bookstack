@@ -95,7 +95,7 @@ This module deploys a highly available BookStack installation on AWS with:
 ```hcl
 module "bookstack" {
   source  = "registry.infrahouse.com/infrahouse/bookstack/aws"
-  version = "3.3.0"
+  version = "3.4.0"
 
   # Network Configuration
   backend_subnet_ids = ["subnet-abc123", "subnet-def456"]
@@ -127,7 +127,7 @@ module "bookstack" {
 ```hcl
 module "bookstack" {
   source  = "registry.infrahouse.com/infrahouse/bookstack/aws"
-  version = "3.3.0"
+  version = "3.4.0"
 
   # Network Configuration
   backend_subnet_ids = ["subnet-abc123", "subnet-def456", "subnet-ghi789"]
