@@ -13,13 +13,19 @@ resource "time_rotating" "key_rotation" {
   rotation_days = var.smtp_key_rotation_days
 }
 
+# Static time resource to properly trigger replacement
+# This is a workaround for https://github.com/hashicorp/terraform-provider-time/issues/118
+resource "time_static" "key_rotation" {
+  rfc3339 = time_rotating.key_rotation.rfc3339
+}
+
 # Access key with automatic rotation
 resource "aws_iam_access_key" "emailer" {
   user = aws_iam_user.emailer.name
 
   lifecycle {
     replace_triggered_by = [
-      time_rotating.key_rotation
+      time_static.key_rotation
     ]
     create_before_destroy = true
   }
