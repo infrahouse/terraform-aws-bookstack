@@ -10,7 +10,7 @@ output "bookstack_instance_role_arn" {
 
 output "rds_instance_identifier" {
   description = "Identifier of the RDS instance."
-  value       = aws_db_instance.db.identifier
+  value       = module.rds.db_instance_id
 }
 
 output "bookstack_load_balancer_arn" {
@@ -40,22 +40,22 @@ output "autoscaling_group_name" {
 
 output "database_address" {
   description = "Address of the RDS database instance"
-  value       = aws_db_instance.db.address
+  value       = module.rds.db_instance_address
 }
 
 output "database_port" {
   description = "Port of the RDS database instance"
-  value       = aws_db_instance.db.port
+  value       = module.rds.db_instance_port
 }
 
 output "database_name" {
   description = "Name of the database"
-  value       = aws_db_instance.db.db_name
+  value       = module.rds.db_instance_name
 }
 
 output "database_secret_name" {
-  description = "Name of the secret containing database credentials"
-  value       = module.db_user.secret_name
+  description = "Name of the secret containing the database master credentials"
+  value       = data.aws_secretsmanager_secret.master.name
 }
 
 output "userdata_size_info" {

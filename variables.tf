@@ -34,9 +34,13 @@ variable "backend_subnet_ids" {
 }
 
 variable "db_instance_type" {
-  description = "Instance type to run the database instances"
+  description = <<-EOF
+    Instance type to run the database instances. Must support RDS Performance
+    Insights, which the RDS module enables unconditionally (so db.t3.micro/small
+    and db.t4g.micro/small are not valid choices).
+  EOF
   type        = string
-  default     = "db.t3.micro"
+  default     = "db.t3.medium"
 }
 
 variable "dns_a_records" {
@@ -52,7 +56,6 @@ variable "dns_a_records" {
 variable "environment" {
   description = "Name of environment."
   type        = string
-  default     = "development"
 }
 
 variable "extra_files" {
@@ -116,8 +119,36 @@ variable "instance_type" {
   default     = "t3.micro"
 }
 
-variable "internet_gateway_id" { # tflint-ignore: terraform_unused_declarations
-  description = "Not used, but AWS Internet Gateway must be present. Ensure by passing its id."
+variable "bookstack_prebuilt_package_url" {
+  description = <<-EOF
+    URL of a pre-built BookStack release tarball that already includes the composer
+    vendor/ directory (single top-level dir, like the upstream source archive). It is
+    downloaded to /var/tmp/bookstack.tar.gz before Puppet runs, which makes the Puppet
+    profile's download_package and run_composer steps no-op (their `creates` guards are
+    satisfied). This avoids running composer at boot, and with it the flaky Codeberg
+    archive endpoint used by the ssddanbrown/htmldiff dependency.
+
+    The version of this tarball MUST match the BookStack version configured in the Puppet
+    profile (profile::bookstack::bookstack_package_url). Set to null to disable and use
+    the stock flow (Puppet downloads source and runs composer install).
+  EOF
+  type        = string
+  default     = "https://infrahouse-omnibus-cache.s3.us-west-1.amazonaws.com/bookstack/bookstack-v25.02.1-vendor.tar.gz"
+}
+
+variable "bookstack_prebuilt_package_sha256" {
+  description = <<-EOF
+    Expected SHA-256 of the bookstack_prebuilt_package_url artifact. The artifact is verified
+    against this value before Puppet runs; a mismatch deletes the download and fails the bootstrap,
+    so a tampered or replaced object cannot inject code into the application. Must be updated
+    together with bookstack_prebuilt_package_url. Set to null to skip verification (not recommended).
+  EOF
+  type        = string
+  default     = "9e31388ce60d740b344a52db2bbd806eb0bd92122ac4783c9f1b0e3d372980e3"
+}
+
+variable "access_log_replication_region" {
+  description = "AWS region for cross-region replication of the ALB access log bucket. Must differ from the deployment region."
   type        = string
 }
 
@@ -206,9 +237,9 @@ variable "ssh_cidr_block" {
 }
 
 variable "ubuntu_codename" {
-  description = "Ubuntu version to use for the elasticsearch node"
+  description = "Ubuntu version to use for the BookStack instances"
   type        = string
-  default     = "jammy"
+  default     = "noble"
 }
 
 variable "zone_id" {
@@ -241,21 +272,6 @@ variable "skip_final_snapshot" {
   description = "Specifies whether to skip the final snapshot when the DB instance is deleted."
   type        = bool
   default     = false
-}
-
-variable "db_identifier" {
-  description = <<-EOF
-    RDS instance identifier. If not provided, defaults to '{var.service_name}-encrypted'.
-
-    DOWNTIME AVOIDANCE: When upgrading from v2.x, RDS will rename the identifier in-place
-    (brief downtime). To prevent this, set this variable to your existing identifier.
-
-    WARNING: Once set, this value is PERMANENT - removing it will trigger the rename.
-
-    Most users should leave this unset and accept the brief downtime for clean naming.
-  EOF
-  type        = string
-  default     = null
 }
 
 # Alarm and Monitoring Variables
@@ -297,12 +313,6 @@ variable "sns_topic_name" {
   default     = null
 }
 
-variable "enable_ses_alarms" {
-  description = "Enable CloudWatch alarms for SES bounce/complaint rates"
-  type        = bool
-  default     = true
-}
-
 variable "ses_bounce_rate_threshold" {
   description = "SES bounce rate percentage threshold (AWS recommends keeping below 5%)"
   type        = number
@@ -323,240 +333,6 @@ variable "ses_complaint_rate_threshold" {
     condition     = var.ses_complaint_rate_threshold >= 0 && var.ses_complaint_rate_threshold <= 1
     error_message = "Complaint rate threshold must be between 0 and 1 (e.g., 0.001 for 0.1%)"
   }
-}
-
-variable "enable_rds_alarms" {
-  description = "Enable CloudWatch alarms for RDS metrics"
-  type        = bool
-  default     = true
-}
-
-variable "rds_cpu_threshold" {
-  description = <<-EOF
-    RDS CPU utilization percentage threshold for alarms.
-    Default is 80% - alarm triggers when CPU exceeds this value.
-  EOF
-  type        = number
-  default     = 80
-
-  validation {
-    condition     = var.rds_cpu_threshold >= 0 && var.rds_cpu_threshold <= 100
-    error_message = "CPU threshold must be between 0 and 100"
-  }
-}
-
-variable "rds_storage_threshold_gb" {
-  description = <<-EOF
-    RDS free storage space threshold in gigabytes (GB) for alarms.
-    Default is 5GB - alarm triggers when free space drops below this value.
-  EOF
-  type        = number
-  default     = 5
-
-  validation {
-    condition     = var.rds_storage_threshold_gb >= 0
-    error_message = "Storage threshold must be a positive number (in GB)"
-  }
-}
-
-variable "rds_connections_threshold" {
-  description = <<-EOF
-    RDS database connections threshold for alarms.
-    Default is 80 - alarm triggers when connection count exceeds this value.
-    Adjust based on your instance type's max_connections setting.
-  EOF
-  type        = number
-  default     = 80
-
-  validation {
-    condition     = var.rds_connections_threshold >= 0
-    error_message = "Connections threshold must be a positive number"
-  }
-}
-
-variable "rds_disk_queue_depth_threshold" {
-  description = <<-EOF
-    RDS disk queue depth threshold for alarms.
-    Default is 10 - alarm triggers when average queue depth exceeds this value.
-    High queue depth indicates sustained I/O bottleneck.
-
-    Recommendations:
-    - 0-10: Normal operation
-    - 10-64: Monitor - may need to upgrade storage or instance
-    - >64: Critical - severe I/O bottleneck
-  EOF
-  type        = number
-  default     = 10
-
-  validation {
-    condition     = var.rds_disk_queue_depth_threshold >= 0
-    error_message = "Disk queue depth threshold must be a positive number"
-  }
-}
-
-variable "rds_freeable_memory_threshold_percentage" {
-  description = <<-EOF
-    RDS freeable memory threshold as a percentage of total instance RAM.
-    Default is 10% - alarm triggers when free memory drops below this percentage.
-
-    The actual MB threshold is calculated based on the instance type:
-    - db.t3.micro (1GB): 10% = 100MB
-    - db.t3.small (2GB): 10% = 200MB
-    - db.t3.medium (4GB): 10% = 400MB
-
-    This scales automatically when you change instance types.
-    Low memory causes performance degradation and potential OOM kills.
-  EOF
-  type        = number
-  default     = 10
-
-  validation {
-    condition     = var.rds_freeable_memory_threshold_percentage >= 0 && var.rds_freeable_memory_threshold_percentage <= 100
-    error_message = "Memory threshold percentage must be between 0 and 100"
-  }
-}
-
-variable "rds_swap_usage_threshold_mb" {
-  description = <<-EOF
-    RDS swap usage threshold in megabytes (MB) for alarms.
-    Default is 256MB - alarm triggers when swap usage exceeds this value.
-
-    High swap usage indicates memory pressure and will cause performance degradation.
-    Ideally, swap usage should be 0. Any sustained swap usage is a sign to upgrade instance.
-  EOF
-  type        = number
-  default     = 256
-
-  validation {
-    condition     = var.rds_swap_usage_threshold_mb >= 0
-    error_message = "Swap usage threshold must be a positive number (in MB)"
-  }
-}
-
-variable "enable_rds_burst_balance_alarm" {
-  description = <<-EOF
-    Enable CPU credit balance alarm for burstable RDS instances (t2/t3).
-
-    CRITICAL for t3.micro: When CPU credits reach 0, CPU is throttled to baseline (10%).
-    This causes severe performance degradation.
-
-    Enable this if using t2/t3 instance classes.
-    Disable if using non-burstable instances (m5, r5, etc).
-  EOF
-  type        = bool
-  default     = true # Safe default - alarm is only relevant for t2/t3
-}
-
-variable "rds_cpu_credit_balance_threshold" {
-  description = <<-EOF
-    RDS CPU credit balance threshold for alarms (t2/t3 instances only).
-    Default is 20 credits - alarm triggers when credit balance drops below this.
-
-    t3.micro accumulates credits at 12 credits/hour and can hold up to 288 credits.
-    At 20 credits remaining, you have ~1.67 hours before throttling (if no credits earned).
-
-    Lower threshold = less warning time before throttling.
-    Higher threshold = more false positives during normal bursting.
-  EOF
-  type        = number
-  default     = 20
-
-  validation {
-    condition     = var.rds_cpu_credit_balance_threshold >= 0
-    error_message = "CPU credit balance threshold must be a positive number"
-  }
-}
-
-variable "enable_rds_latency_alarms" {
-  description = <<-EOF
-    Enable read/write latency alarms for RDS.
-
-    Monitors average query latency. High latency indicates:
-    - I/O bottlenecks
-    - Insufficient instance resources
-    - Query optimization needed
-    - Network issues
-  EOF
-  type        = bool
-  default     = true
-}
-
-variable "rds_read_latency_threshold_ms" {
-  description = <<-EOF
-    RDS read latency threshold in milliseconds for alarms.
-    Default is 25ms - alarm triggers when average read latency exceeds this.
-
-    Typical latencies:
-    - <5ms: Excellent (SSD, good indexes)
-    - 5-25ms: Good (normal operation)
-    - 25-100ms: Acceptable (may need optimization)
-    - >100ms: Poor (investigate immediately)
-  EOF
-  type        = number
-  default     = 25
-
-  validation {
-    condition     = var.rds_read_latency_threshold_ms > 0
-    error_message = "Read latency threshold must be greater than 0"
-  }
-}
-
-variable "rds_write_latency_threshold_ms" {
-  description = <<-EOF
-    RDS write latency threshold in milliseconds for alarms.
-    Default is 25ms - alarm triggers when average write latency exceeds this.
-
-    Write latency is typically higher than read latency due to fsync requirements.
-
-    Typical latencies:
-    - <10ms: Excellent
-    - 10-25ms: Good
-    - 25-100ms: Acceptable
-    - >100ms: Poor (investigate immediately)
-  EOF
-  type        = number
-  default     = 25
-
-  validation {
-    condition     = var.rds_write_latency_threshold_ms > 0
-    error_message = "Write latency threshold must be greater than 0"
-  }
-}
-
-variable "enable_rds_cloudwatch_logs" {
-  description = <<-EOF
-    Enable CloudWatch logs export for RDS.
-    Exports error, general, and slow query logs to CloudWatch.
-  EOF
-  type        = bool
-  default     = true
-}
-
-variable "rds_cloudwatch_logs_retention_days" {
-  description = <<-EOF
-    Number of days to retain RDS CloudWatch logs.
-    Default is 365 days (1 year). Set to 0 for never expire.
-    Valid values: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653
-  EOF
-  type        = number
-  default     = 365
-
-  validation {
-    condition = contains([
-      0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731,
-      1096, 1827, 2192, 2557, 2922, 3288, 3653
-    ], var.rds_cloudwatch_logs_retention_days)
-    error_message = "Retention days must be one of AWS's allowed values: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653"
-  }
-}
-
-variable "enable_rds_performance_insights" {
-  description = <<-EOF
-    Enable Performance Insights for RDS.
-    Provides advanced database performance monitoring and analysis.
-  EOF
-  type        = bool
-  default     = true
 }
 
 variable "rds_performance_insights_retention_days" {

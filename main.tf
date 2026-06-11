@@ -2,12 +2,15 @@ locals {
   efs_mount_path = "/mnt/efs"
 }
 module "bookstack-userdata" {
-  source                   = "registry.infrahouse.com/infrahouse/cloud-init/aws"
-  version                  = "2.2.2"
+  source  = "registry.infrahouse.com/infrahouse/cloud-init/aws"
+  version = "2.3.1"
+
   environment              = var.environment
   role                     = "bookstack"
   puppet_hiera_config_path = var.puppet_hiera_config_path
   puppet_module_path       = var.puppet_module_path
+  puppet_root_directory    = var.puppet_root_directory
+  puppet_debug_logging     = var.puppet_debug_logging
   ubuntu_codename          = var.ubuntu_codename
   gzip_userdata            = var.compress_userdata
 
@@ -30,18 +33,36 @@ module "bookstack-userdata" {
   )
   extra_repos = var.extra_repos
 
+  # Pre-seed /var/tmp/bookstack.tar.gz with a tarball that already contains the
+  # composer vendor/ dir, BEFORE Puppet runs. This satisfies the `creates` guards
+  # on the Puppet profile's download_package and run_composer execs, so neither
+  # runs at boot — composer never executes and never contacts the (flaky) Codeberg
+  # archive endpoint. Set bookstack_prebuilt_package_url = null to fall back to the
+  # stock flow (Puppet downloads source + runs composer install).
+  #
+  # The artifact is verified against bookstack_prebuilt_package_sha256: a mismatch
+  # (tampered/replaced object, or corrupt download) deletes the file and fails the
+  # bootstrap, so untrusted code is never unpacked into the application.
+  pre_runcmd = var.bookstack_prebuilt_package_url != null ? concat(
+    ["curl -fsSL -o /var/tmp/bookstack.tar.gz ${var.bookstack_prebuilt_package_url}"],
+    var.bookstack_prebuilt_package_sha256 != null ? [
+      "echo '${var.bookstack_prebuilt_package_sha256}  /var/tmp/bookstack.tar.gz' > /var/tmp/bookstack.tar.gz.sha256sum",
+      "sha256sum -c /var/tmp/bookstack.tar.gz.sha256sum || { rm -f /var/tmp/bookstack.tar.gz; exit 1; }"
+    ] : []
+  ) : []
+
   custom_facts = merge(
     {
       "bookstack" : {
         "uploads_dir" : "${local.efs_mount_path}/uploads"
         "app_key_secret" : module.bookstack_app_key.secret_name
         "app_url" : "https://${var.service_name}.${data.aws_route53_zone.current.name}"
-        "db_host" : aws_db_instance.db.address
-        "db_port" : aws_db_instance.db.port
-        "db_database" : aws_db_instance.db.db_name
-        "db_username" : jsondecode(module.db_user.secret_value)["user"]
-        "db_password_secret" : module.db_user.secret_name
-        "mail_host" : local.smtp_endpoints[data.aws_region.current.name]
+        "db_host" : module.rds.db_instance_address
+        "db_port" : module.rds.db_instance_port
+        "db_database" : module.rds.db_instance_name
+        "db_username" : module.rds.db_instance_username
+        "db_password_secret" : data.aws_secretsmanager_secret.master.name
+        "mail_host" : local.smtp_endpoints[data.aws_region.current.region]
         "mail_port" : 587
         "mail_encryption" : "tls"
         "mail_verify_ssl" : false
@@ -62,15 +83,11 @@ module "bookstack-userdata" {
       }
     } : {}
   )
-
-  post_runcmd = [
-    "touch /tmp/puppet-done"
-  ]
 }
 
 module "bookstack" {
   source  = "registry.infrahouse.com/infrahouse/website-pod/aws"
-  version = "5.8.2"
+  version = "6.0.1"
   providers = {
     aws     = aws
     aws.dns = aws.dns
@@ -81,14 +98,13 @@ module "bookstack" {
   subnets                               = var.lb_subnet_ids
   backend_subnets                       = var.backend_subnet_ids
   zone_id                               = var.zone_id
-  internet_gateway_id                   = var.internet_gateway_id
+  replication_region                    = var.access_log_replication_region
   key_pair_name                         = var.key_pair_name == null ? aws_key_pair.deployer.key_name : var.key_pair_name
   ssh_cidr_block                        = var.ssh_cidr_block
   dns_a_records                         = local.dns_a_records
   alb_name_prefix                       = substr(var.service_name, 0, 6) ## "name_prefix" cannot be longer than 6 characters: "elastic"
   userdata                              = module.bookstack-userdata.userdata
   instance_profile_permissions          = data.aws_iam_policy_document.instance_permissions.json
-  alb_access_log_enabled                = true
   alb_access_log_force_destroy          = var.access_log_force_destroy
   stickiness_enabled                    = true
   asg_min_size                          = var.asg_min_size == null ? length(var.backend_subnet_ids) : var.asg_min_size
@@ -102,6 +118,7 @@ module "bookstack" {
   health_check_grace_period             = var.asg_health_check_grace_period
   wait_for_capacity_timeout             = "${var.asg_health_check_grace_period * 1.5}m"
   sns_topic_alarm_arn                   = var.sns_topic_alarm_arn
+  alarm_emails                          = var.alarm_emails
   asg_min_elb_capacity                  = 1
   instance_role_name                    = local.ec2_role_name
   tags = merge(

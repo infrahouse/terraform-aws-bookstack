@@ -1,74 +1,44 @@
-resource "aws_db_instance" "db" {
-  instance_class            = var.db_instance_type
-  identifier                = local.db_identifier
-  allocated_storage         = 10
-  max_allocated_storage     = 100
-  db_name                   = var.service_name
-  engine                    = "mysql"
-  engine_version            = "8.0"
-  username                  = "${var.service_name}_user"
-  password                  = random_password.db_user.result
-  db_subnet_group_name      = aws_db_subnet_group.db.name
-  multi_az                  = true
-  backup_retention_period   = 7
-  deletion_protection       = var.deletion_protection
-  skip_final_snapshot       = var.skip_final_snapshot
-  apply_immediately         = true
-  final_snapshot_identifier = "${var.service_name}-final-snapshot"
-  parameter_group_name      = aws_db_parameter_group.mysql.name
-  storage_encrypted         = true
-  kms_key_id                = var.storage_encryption_key_arn
-  vpc_security_group_ids = [
-    aws_security_group.db.id
+module "rds" {
+  source  = "registry.infrahouse.com/infrahouse/rds/aws"
+  version = "0.2.2"
+
+  environment  = var.environment
+  service_name = var.service_name
+  subnet_ids   = var.backend_subnet_ids
+
+  # Preserve current behavior: reachable from anywhere in the VPC.
+  allowed_cidrs = [data.aws_vpc.selected.cidr_block]
+
+  instance_class        = var.db_instance_type
+  engine_version        = "8.4"
+  db_name               = var.service_name
+  username              = "${var.service_name}_user"
+  multi_az              = true
+  allocated_storage     = 20 # gp3 minimum for MySQL
+  max_allocated_storage = 100
+  deletion_protection   = var.deletion_protection
+  skip_final_snapshot   = var.skip_final_snapshot
+  kms_key_id            = var.storage_encryption_key_arn
+
+  # ROW is the default (and only forward-looking) binlog_format in MySQL 8.4,
+  # so no parameter overrides are needed.
+  parameter_group_family = "mysql8.4"
+
+  performance_insights_retention_period = var.rds_performance_insights_retention_days
+
+  # The module manages CloudWatch alarms, SNS, and email subscriptions.
+  alarm_emails = var.alarm_emails
+
+  # Let the EC2 instance role read the AWS-managed master password secret.
+  secret_readers = [
+    local.ec2_role_arn
   ]
 
-  # CloudWatch Logs Export
-  enabled_cloudwatch_logs_exports = var.enable_rds_cloudwatch_logs ? ["error", "general", "slowquery"] : []
-
-  # Performance Insights
-  # Automatically disabled for instance types that don't support it (see locals.tf)
-  performance_insights_enabled          = local.performance_insights_enabled
-  performance_insights_kms_key_id       = local.performance_insights_enabled ? var.storage_encryption_key_arn : null
-  performance_insights_retention_period = local.performance_insights_enabled ? var.rds_performance_insights_retention_days : null
-
-  tags = merge(
-    local.tags,
-    {
-      module_version : local.module_version
-    }
-  )
-  depends_on = [
-    aws_cloudwatch_log_group.rds_error,
-    aws_cloudwatch_log_group.rds_general,
-    aws_cloudwatch_log_group.rds_slowquery
-  ]
+  tags = local.tags
 }
 
-resource "aws_db_subnet_group" "db" {
-  name_prefix = var.service_name
-  subnet_ids  = var.backend_subnet_ids
-  tags        = local.tags
-}
-
-
-resource "random_password" "db_user" {
-  length  = 21
-  special = false
-}
-
-resource "aws_db_parameter_group" "mysql" {
-  name_prefix = "${var.service_name}-"
-  family      = "mysql8.0"
-  dynamic "parameter" {
-    for_each = toset(
-      concat(
-        local.db_params_common,
-      )
-    )
-    content {
-      apply_method = parameter.value.apply_method
-      name         = parameter.value.name
-      value        = parameter.value.value
-    }
-  }
+# Resolve the name of the module's AWS-managed master password secret so it can be
+# passed to the application (Puppet reads the secret by name).
+data "aws_secretsmanager_secret" "master" {
+  arn = module.rds.master_secret_arn
 }

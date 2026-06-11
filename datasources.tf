@@ -57,7 +57,7 @@ data "aws_iam_policy_document" "instance_permissions" {
     ]
     resources = [
       module.bookstack_app_key.secret_arn,
-      module.db_user.secret_arn,
+      module.rds.master_secret_arn,
       module.ses_smtp_password.secret_arn,
       data.aws_secretsmanager_secret.google_client.arn
     ]
@@ -66,10 +66,4 @@ data "aws_iam_policy_document" "instance_permissions" {
 
 data "aws_vpc" "selected" {
   id = data.aws_subnet.selected.vpc_id
-}
-
-# Look up EC2 instance type specs to get memory size
-# RDS instance types use the same hardware as EC2 (db.t3.micro = t3.micro)
-data "aws_ec2_instance_type" "db" {
-  instance_type = replace(var.db_instance_type, "db.", "")
 }

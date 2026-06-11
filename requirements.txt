@@ -1,2 +1,11 @@
-pytest-infrahouse ~= 0.9, >= 0.9.3
-infrahouse-core ~= 0.17
+pytest-infrahouse ~= 0.24
+infrahouse-core ~= 1.1
+
+# Documentation dependencies
+diagrams ~= 0.25
+mkdocs-material ~= 9.7
+mkdocs-minify-plugin ~= 0.8
+mkdocs-glightbox ~= 0.4
+
+# Security
+checkov ~= 3.2

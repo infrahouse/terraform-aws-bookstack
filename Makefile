@@ -40,7 +40,8 @@ test-keep:  ## Run a test and keep resources
 		--test-role-arn=${TEST_ROLE} \
 		--keep-after \
 		-k aws-6 \
-		tests/test_module.py
+		tests/test_module.py \
+		2>&1 | tee pytest-`date +%Y%m%d-%H%M%S`-output.log
 
 .PHONY: test-clean
 test-clean:  ## Run a test and destroy resources
@@ -48,13 +49,14 @@ test-clean:  ## Run a test and destroy resources
 		--aws-region=${TEST_REGION} \
 		--test-role-arn=${TEST_ROLE} \
 		-k aws-6 \
-		tests/test_module.py
+		tests/test_module.py \
+		2>&1 | tee pytest-`date +%Y%m%d-%H%M%S`-output.log
 
 
 .PHONY: bootstrap
 bootstrap: install-hooks ## bootstrap the development environment
-	pip install -U "pip ~= 23.1"
-	pip install -U "setuptools ~= 68.0"
+	pip install -U "pip ~= 26.1"
+	pip install -U "setuptools ~= 82.0"
 	pip install -r requirements.txt
 
 .PHONY: clean
