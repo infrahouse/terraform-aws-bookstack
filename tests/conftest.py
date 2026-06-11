@@ -11,4 +11,6 @@ LOG = logging.getLogger(__name__)
 TERRAFORM_ROOT_DIR = "test_data"
 
 
-setup_logging(LOG, debug=True)
+# Configure the root logger (not just LOG) so progress from library loggers such as
+# pytest_infrahouse (e.g. wait_for_instance_refresh) is also streamed during the test.
+setup_logging(debug=False)

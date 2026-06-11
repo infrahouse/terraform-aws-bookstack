@@ -8,6 +8,12 @@
 # Crash log files
 crash.log
 
+# Test output logs from `make test-keep` / `make test-clean`
+pytest-*-output.log
+
+# mkdocs build output
+site/
+
 # Ignore any .tfvars files that are generated automatically for each Terraform run. Most
 # .tfvars files are managed as part of configuration and so should be included in
 # version control.
@@ -40,3 +46,4 @@ __pycache__
 /.venv/
 
 .claude/*.local.json
+.claude/reviews

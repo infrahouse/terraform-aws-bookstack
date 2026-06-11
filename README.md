@@ -399,7 +399,7 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.5 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.11, < 7.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0, < 7.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.6 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.13 |
 | <a name="requirement_tls"></a> [tls](#requirement\_tls) | ~> 4.0 |
@@ -408,43 +408,28 @@ Apache 2.0 Licensed. See LICENSE for full details.
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.11, < 7.0 |
-| <a name="provider_aws.dns"></a> [aws.dns](#provider\_aws.dns) | >= 5.11, < 7.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | ~> 3.6 |
-| <a name="provider_time"></a> [time](#provider\_time) | ~> 0.13 |
-| <a name="provider_tls"></a> [tls](#provider\_tls) | ~> 4.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.50.0 |
+| <a name="provider_aws.dns"></a> [aws.dns](#provider\_aws.dns) | 6.50.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.9.0 |
+| <a name="provider_time"></a> [time](#provider\_time) | 0.14.0 |
+| <a name="provider_tls"></a> [tls](#provider\_tls) | 4.3.0 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_bookstack"></a> [bookstack](#module\_bookstack) | registry.infrahouse.com/infrahouse/website-pod/aws | 5.8.2 |
-| <a name="module_bookstack-userdata"></a> [bookstack-userdata](#module\_bookstack-userdata) | registry.infrahouse.com/infrahouse/cloud-init/aws | 2.2.2 |
-| <a name="module_bookstack_app_key"></a> [bookstack\_app\_key](#module\_bookstack\_app\_key) | registry.infrahouse.com/infrahouse/secret/aws | 1.1.0 |
-| <a name="module_db_user"></a> [db\_user](#module\_db\_user) | registry.infrahouse.com/infrahouse/secret/aws | 1.1.0 |
-| <a name="module_ses_smtp_password"></a> [ses\_smtp\_password](#module\_ses\_smtp\_password) | registry.infrahouse.com/infrahouse/secret/aws | 1.1.0 |
+| <a name="module_bookstack"></a> [bookstack](#module\_bookstack) | registry.infrahouse.com/infrahouse/website-pod/aws | 6.0.1 |
+| <a name="module_bookstack-userdata"></a> [bookstack-userdata](#module\_bookstack-userdata) | registry.infrahouse.com/infrahouse/cloud-init/aws | 2.3.1 |
+| <a name="module_bookstack_app_key"></a> [bookstack\_app\_key](#module\_bookstack\_app\_key) | registry.infrahouse.com/infrahouse/secret/aws | 1.3.0 |
+| <a name="module_rds"></a> [rds](#module\_rds) | registry.infrahouse.com/infrahouse/rds/aws | 0.2.2 |
+| <a name="module_ses_smtp_password"></a> [ses\_smtp\_password](#module\_ses\_smtp\_password) | registry.infrahouse.com/infrahouse/secret/aws | 1.3.0 |
 
 ## Resources
 
 | Name | Type |
 |------|------|
-| [aws_cloudwatch_log_group.rds_error](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
-| [aws_cloudwatch_log_group.rds_general](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
-| [aws_cloudwatch_log_group.rds_slowquery](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
-| [aws_cloudwatch_metric_alarm.rds_connections](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
-| [aws_cloudwatch_metric_alarm.rds_cpu](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
-| [aws_cloudwatch_metric_alarm.rds_cpu_credit_balance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
-| [aws_cloudwatch_metric_alarm.rds_disk_queue_depth](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
-| [aws_cloudwatch_metric_alarm.rds_freeable_memory](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
-| [aws_cloudwatch_metric_alarm.rds_read_latency](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
-| [aws_cloudwatch_metric_alarm.rds_storage](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
-| [aws_cloudwatch_metric_alarm.rds_swap_usage](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
-| [aws_cloudwatch_metric_alarm.rds_write_latency](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_cloudwatch_metric_alarm.ses_bounce_rate](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_cloudwatch_metric_alarm.ses_complaint_rate](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
-| [aws_db_instance.db](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance) | resource |
-| [aws_db_parameter_group.mysql](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_parameter_group) | resource |
-| [aws_db_subnet_group.db](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_subnet_group) | resource |
 | [aws_efs_file_system.bookstack-uploads](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/efs_file_system) | resource |
 | [aws_efs_mount_target.bookstack-uploads](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/efs_mount_target) | resource |
 | [aws_iam_access_key.emailer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_access_key) | resource |
@@ -452,16 +437,13 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | [aws_iam_user.emailer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user) | resource |
 | [aws_iam_user_policy_attachment.emailer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user_policy_attachment) | resource |
 | [aws_key_pair.deployer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/key_pair) | resource |
-| [aws_security_group.db](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_security_group.efs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_sns_topic.alarms](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic) | resource |
 | [aws_sns_topic_subscription.alarm_emails](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_subscription) | resource |
 | [aws_vpc_security_group_egress_rule.efs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_egress_rule) | resource |
 | [aws_vpc_security_group_ingress_rule.efs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_ingress_rule) | resource |
 | [aws_vpc_security_group_ingress_rule.efs_icmp](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_ingress_rule) | resource |
-| [aws_vpc_security_group_ingress_rule.mysql](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_ingress_rule) | resource |
 | [random_id.bookstack_app_key](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) | resource |
-| [random_password.db_user](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 | [random_string.role-suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [time_rotating.key_rotation](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/rotating) | resource |
 | [time_static.key_rotation](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | resource |
@@ -469,12 +451,12 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | [aws_ami.ubuntu_pro](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
 | [aws_availability_zones.available](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/availability_zones) | data source |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
-| [aws_ec2_instance_type.db](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ec2_instance_type) | data source |
 | [aws_iam_policy_document.emailer_permissions](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.instance_permissions](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 | [aws_route53_zone.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/route53_zone) | data source |
 | [aws_secretsmanager_secret.google_client](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/secretsmanager_secret) | data source |
+| [aws_secretsmanager_secret.master](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/secretsmanager_secret) | data source |
 | [aws_ses_domain_identity.zone](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ses_domain_identity) | data source |
 | [aws_subnet.selected](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/subnet) | data source |
 | [aws_vpc.selected](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/vpc) | data source |
@@ -484,6 +466,7 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_access_log_force_destroy"></a> [access\_log\_force\_destroy](#input\_access\_log\_force\_destroy) | Destroy S3 bucket with access logs even if non-empty | `bool` | `false` | no |
+| <a name="input_access_log_replication_region"></a> [access\_log\_replication\_region](#input\_access\_log\_replication\_region) | AWS region for cross-region replication of the ALB access log bucket. Must differ from the deployment region. | `string` | n/a | yes |
 | <a name="input_alarm_emails"></a> [alarm\_emails](#input\_alarm\_emails) | List of email addresses to receive alarm notifications for SES bounce rate, RDS issues, etc.<br/>AWS will send confirmation emails that must be accepted.<br/>At least one email is required. | `list(string)` | n/a | yes |
 | <a name="input_alarm_topic_arns"></a> [alarm\_topic\_arns](#input\_alarm\_topic\_arns) | List of existing SNS topic ARNs to send alarms to.<br/>Use for advanced integrations like PagerDuty, Slack, etc. | `list(string)` | `[]` | no |
 | <a name="input_asg_ami"></a> [asg\_ami](#input\_asg\_ami) | Image for EC2 instances | `string` | `null` | no |
@@ -491,25 +474,19 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | <a name="input_asg_max_size"></a> [asg\_max\_size](#input\_asg\_max\_size) | Maximum number of instances in ASG | `number` | `null` | no |
 | <a name="input_asg_min_size"></a> [asg\_min\_size](#input\_asg\_min\_size) | Minimum number of instances in ASG | `number` | `null` | no |
 | <a name="input_backend_subnet_ids"></a> [backend\_subnet\_ids](#input\_backend\_subnet\_ids) | List of subnet ids where the webserver and database instances will be created | `list(string)` | n/a | yes |
+| <a name="input_bookstack_prebuilt_package_sha256"></a> [bookstack\_prebuilt\_package\_sha256](#input\_bookstack\_prebuilt\_package\_sha256) | Expected SHA-256 of the bookstack\_prebuilt\_package\_url artifact. The artifact is verified<br/>against this value before Puppet runs; a mismatch deletes the download and fails the bootstrap,<br/>so a tampered or replaced object cannot inject code into the application. Must be updated<br/>together with bookstack\_prebuilt\_package\_url. Set to null to skip verification (not recommended). | `string` | `"9e31388ce60d740b344a52db2bbd806eb0bd92122ac4783c9f1b0e3d372980e3"` | no |
+| <a name="input_bookstack_prebuilt_package_url"></a> [bookstack\_prebuilt\_package\_url](#input\_bookstack\_prebuilt\_package\_url) | URL of a pre-built BookStack release tarball that already includes the composer<br/>vendor/ directory (single top-level dir, like the upstream source archive). It is<br/>downloaded to /var/tmp/bookstack.tar.gz before Puppet runs, which makes the Puppet<br/>profile's download\_package and run\_composer steps no-op (their `creates` guards are<br/>satisfied). This avoids running composer at boot, and with it the flaky Codeberg<br/>archive endpoint used by the ssddanbrown/htmldiff dependency.<br/><br/>The version of this tarball MUST match the BookStack version configured in the Puppet<br/>profile (profile::bookstack::bookstack_package_url). Set to null to disable and use<br/>the stock flow (Puppet downloads source and runs composer install). | `string` | `"https://infrahouse-omnibus-cache.s3.us-west-1.amazonaws.com/bookstack/bookstack-v25.02.1-vendor.tar.gz"` | no |
 | <a name="input_compress_userdata"></a> [compress\_userdata](#input\_compress\_userdata) | Compress userdata with gzip to reduce size and work around AWS 16KB limit.<br/><br/>When enabled, userdata is gzip-compressed before being sent to EC2 instances.<br/>AWS automatically decompresses it before execution. This can reduce userdata<br/>size by 60-70%, allowing more packages, files, and configuration.<br/><br/>Recommended: Enable if userdata\_size\_info shows approaching limit (>12KB).<br/><br/>Requirements: gzip command must be available on the system running terraform. | `bool` | `false` | no |
-| <a name="input_db_identifier"></a> [db\_identifier](#input\_db\_identifier) | RDS instance identifier. If not provided, defaults to '{var.service\_name}-encrypted'.<br/><br/>DOWNTIME AVOIDANCE: When upgrading from v2.x, RDS will rename the identifier in-place<br/>(brief downtime). To prevent this, set this variable to your existing identifier.<br/><br/>WARNING: Once set, this value is PERMANENT - removing it will trigger the rename.<br/><br/>Most users should leave this unset and accept the brief downtime for clean naming. | `string` | `null` | no |
-| <a name="input_db_instance_type"></a> [db\_instance\_type](#input\_db\_instance\_type) | Instance type to run the database instances | `string` | `"db.t3.micro"` | no |
+| <a name="input_db_instance_type"></a> [db\_instance\_type](#input\_db\_instance\_type) | Instance type to run the database instances. Must support RDS Performance<br/>Insights, which the RDS module enables unconditionally (so db.t3.micro/small<br/>and db.t4g.micro/small are not valid choices). | `string` | `"db.t3.medium"` | no |
 | <a name="input_deletion_protection"></a> [deletion\_protection](#input\_deletion\_protection) | Specifies whether to enable deletion protection for the DB instance. | `bool` | `true` | no |
 | <a name="input_dns_a_records"></a> [dns\_a\_records](#input\_dns\_a\_records) | A list of A records the BookStack application will be accessible at.<br/>E.g. ["wiki"] or ["bookstack", "docs"].<br/>By default, it will be [var.service\_name]. | `list(string)` | `null` | no |
 | <a name="input_efs_encryption_key_arn"></a> [efs\_encryption\_key\_arn](#input\_efs\_encryption\_key\_arn) | KMS key ARN to encrypt EFS file system.<br/>If not provided, AWS managed key will be used.<br/>EFS encryption is always enabled. | `string` | `null` | no |
-| <a name="input_enable_rds_alarms"></a> [enable\_rds\_alarms](#input\_enable\_rds\_alarms) | Enable CloudWatch alarms for RDS metrics | `bool` | `true` | no |
-| <a name="input_enable_rds_burst_balance_alarm"></a> [enable\_rds\_burst\_balance\_alarm](#input\_enable\_rds\_burst\_balance\_alarm) | Enable CPU credit balance alarm for burstable RDS instances (t2/t3).<br/><br/>CRITICAL for t3.micro: When CPU credits reach 0, CPU is throttled to baseline (10%).<br/>This causes severe performance degradation.<br/><br/>Enable this if using t2/t3 instance classes.<br/>Disable if using non-burstable instances (m5, r5, etc). | `bool` | `true` | no |
-| <a name="input_enable_rds_cloudwatch_logs"></a> [enable\_rds\_cloudwatch\_logs](#input\_enable\_rds\_cloudwatch\_logs) | Enable CloudWatch logs export for RDS.<br/>Exports error, general, and slow query logs to CloudWatch. | `bool` | `true` | no |
-| <a name="input_enable_rds_latency_alarms"></a> [enable\_rds\_latency\_alarms](#input\_enable\_rds\_latency\_alarms) | Enable read/write latency alarms for RDS.<br/><br/>Monitors average query latency. High latency indicates:<br/>- I/O bottlenecks<br/>- Insufficient instance resources<br/>- Query optimization needed<br/>- Network issues | `bool` | `true` | no |
-| <a name="input_enable_rds_performance_insights"></a> [enable\_rds\_performance\_insights](#input\_enable\_rds\_performance\_insights) | Enable Performance Insights for RDS.<br/>Provides advanced database performance monitoring and analysis. | `bool` | `true` | no |
-| <a name="input_enable_ses_alarms"></a> [enable\_ses\_alarms](#input\_enable\_ses\_alarms) | Enable CloudWatch alarms for SES bounce/complaint rates | `bool` | `true` | no |
-| <a name="input_environment"></a> [environment](#input\_environment) | Name of environment. | `string` | `"development"` | no |
+| <a name="input_environment"></a> [environment](#input\_environment) | Name of environment. | `string` | n/a | yes |
 | <a name="input_extra_files"></a> [extra\_files](#input\_extra\_files) | Additional files to create on an instance.<br/><br/>⚠️  WARNING: Large files increase userdata size. AWS has a 16KB limit.<br/>Consider storing large scripts in S3 and downloading them instead.<br/>Check the userdata\_size\_info output after applying to monitor usage. | <pre>list(<br/>    object(<br/>      {<br/>        content     = string<br/>        path        = string<br/>        permissions = string<br/>      }<br/>    )<br/>  )</pre> | `[]` | no |
 | <a name="input_extra_instance_profile_permissions"></a> [extra\_instance\_profile\_permissions](#input\_extra\_instance\_profile\_permissions) | A JSON with a permissions policy document.<br/>The policy will be attached to the ASG instance profile. | `string` | `null` | no |
 | <a name="input_extra_repos"></a> [extra\_repos](#input\_extra\_repos) | Additional APT repositories to configure on an instance. | <pre>map(<br/>    object(<br/>      {<br/>        source = string<br/>        key    = string<br/>      }<br/>    )<br/>  )</pre> | `{}` | no |
 | <a name="input_google_oauth_client_secret"></a> [google\_oauth\_client\_secret](#input\_google\_oauth\_client\_secret) | AWS secretsmanager secret name with a Google Oauth 'client id' and 'client secret'. | `string` | n/a | yes |
 | <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type) | Instance type to run the webserver instances | `string` | `"t3.micro"` | no |
-| <a name="input_internet_gateway_id"></a> [internet\_gateway\_id](#input\_internet\_gateway\_id) | Not used, but AWS Internet Gateway must be present. Ensure by passing its id. | `string` | n/a | yes |
 | <a name="input_key_pair_name"></a> [key\_pair\_name](#input\_key\_pair\_name) | SSH keypair name to be deployed in EC2 instances | `string` | `null` | no |
 | <a name="input_lb_subnet_ids"></a> [lb\_subnet\_ids](#input\_lb\_subnet\_ids) | List of subnet ids where the load balancer will be created | `list(string)` | n/a | yes |
 | <a name="input_packages"></a> [packages](#input\_packages) | List of packages to install when the instance bootstraps.<br/><br/>⚠️  WARNING: Each package name increases userdata size. AWS has a 16KB limit.<br/>The module already includes mysql-client and nfs-common by default.<br/>Check the userdata\_size\_info output after applying to monitor usage. | `list(string)` | `[]` | no |
@@ -517,17 +494,7 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | <a name="input_puppet_hiera_config_path"></a> [puppet\_hiera\_config\_path](#input\_puppet\_hiera\_config\_path) | Path to hiera configuration file. | `string` | `"{root_directory}/environments/{environment}/hiera.yaml"` | no |
 | <a name="input_puppet_module_path"></a> [puppet\_module\_path](#input\_puppet\_module\_path) | Path to common puppet modules. | `string` | `"{root_directory}/modules"` | no |
 | <a name="input_puppet_root_directory"></a> [puppet\_root\_directory](#input\_puppet\_root\_directory) | Path where the puppet code is hosted. | `string` | `"/opt/puppet-code"` | no |
-| <a name="input_rds_cloudwatch_logs_retention_days"></a> [rds\_cloudwatch\_logs\_retention\_days](#input\_rds\_cloudwatch\_logs\_retention\_days) | Number of days to retain RDS CloudWatch logs.<br/>Default is 365 days (1 year). Set to 0 for never expire.<br/>Valid values: 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653 | `number` | `365` | no |
-| <a name="input_rds_connections_threshold"></a> [rds\_connections\_threshold](#input\_rds\_connections\_threshold) | RDS database connections threshold for alarms.<br/>Default is 80 - alarm triggers when connection count exceeds this value.<br/>Adjust based on your instance type's max\_connections setting. | `number` | `80` | no |
-| <a name="input_rds_cpu_credit_balance_threshold"></a> [rds\_cpu\_credit\_balance\_threshold](#input\_rds\_cpu\_credit\_balance\_threshold) | RDS CPU credit balance threshold for alarms (t2/t3 instances only).<br/>Default is 20 credits - alarm triggers when credit balance drops below this.<br/><br/>t3.micro accumulates credits at 12 credits/hour and can hold up to 288 credits.<br/>At 20 credits remaining, you have ~1.67 hours before throttling (if no credits earned).<br/><br/>Lower threshold = less warning time before throttling.<br/>Higher threshold = more false positives during normal bursting. | `number` | `20` | no |
-| <a name="input_rds_cpu_threshold"></a> [rds\_cpu\_threshold](#input\_rds\_cpu\_threshold) | RDS CPU utilization percentage threshold for alarms.<br/>Default is 80% - alarm triggers when CPU exceeds this value. | `number` | `80` | no |
-| <a name="input_rds_disk_queue_depth_threshold"></a> [rds\_disk\_queue\_depth\_threshold](#input\_rds\_disk\_queue\_depth\_threshold) | RDS disk queue depth threshold for alarms.<br/>Default is 10 - alarm triggers when average queue depth exceeds this value.<br/>High queue depth indicates sustained I/O bottleneck.<br/><br/>Recommendations:<br/>- 0-10: Normal operation<br/>- 10-64: Monitor - may need to upgrade storage or instance<br/>- >64: Critical - severe I/O bottleneck | `number` | `10` | no |
-| <a name="input_rds_freeable_memory_threshold_percentage"></a> [rds\_freeable\_memory\_threshold\_percentage](#input\_rds\_freeable\_memory\_threshold\_percentage) | RDS freeable memory threshold as a percentage of total instance RAM.<br/>Default is 10% - alarm triggers when free memory drops below this percentage.<br/><br/>The actual MB threshold is calculated based on the instance type:<br/>- db.t3.micro (1GB): 10% = 100MB<br/>- db.t3.small (2GB): 10% = 200MB<br/>- db.t3.medium (4GB): 10% = 400MB<br/><br/>This scales automatically when you change instance types.<br/>Low memory causes performance degradation and potential OOM kills. | `number` | `10` | no |
 | <a name="input_rds_performance_insights_retention_days"></a> [rds\_performance\_insights\_retention\_days](#input\_rds\_performance\_insights\_retention\_days) | Number of days to retain Performance Insights data.<br/>Valid values: 7 (free tier) or 731 (2 years, additional cost).<br/>Default is 7 days. | `number` | `7` | no |
-| <a name="input_rds_read_latency_threshold_ms"></a> [rds\_read\_latency\_threshold\_ms](#input\_rds\_read\_latency\_threshold\_ms) | RDS read latency threshold in milliseconds for alarms.<br/>Default is 25ms - alarm triggers when average read latency exceeds this.<br/><br/>Typical latencies:<br/>- <5ms: Excellent (SSD, good indexes)<br/>- 5-25ms: Good (normal operation)<br/>- 25-100ms: Acceptable (may need optimization)<br/>- >100ms: Poor (investigate immediately) | `number` | `25` | no |
-| <a name="input_rds_storage_threshold_gb"></a> [rds\_storage\_threshold\_gb](#input\_rds\_storage\_threshold\_gb) | RDS free storage space threshold in gigabytes (GB) for alarms.<br/>Default is 5GB - alarm triggers when free space drops below this value. | `number` | `5` | no |
-| <a name="input_rds_swap_usage_threshold_mb"></a> [rds\_swap\_usage\_threshold\_mb](#input\_rds\_swap\_usage\_threshold\_mb) | RDS swap usage threshold in megabytes (MB) for alarms.<br/>Default is 256MB - alarm triggers when swap usage exceeds this value.<br/><br/>High swap usage indicates memory pressure and will cause performance degradation.<br/>Ideally, swap usage should be 0. Any sustained swap usage is a sign to upgrade instance. | `number` | `256` | no |
-| <a name="input_rds_write_latency_threshold_ms"></a> [rds\_write\_latency\_threshold\_ms](#input\_rds\_write\_latency\_threshold\_ms) | RDS write latency threshold in milliseconds for alarms.<br/>Default is 25ms - alarm triggers when average write latency exceeds this.<br/><br/>Write latency is typically higher than read latency due to fsync requirements.<br/><br/>Typical latencies:<br/>- <10ms: Excellent<br/>- 10-25ms: Good<br/>- 25-100ms: Acceptable<br/>- >100ms: Poor (investigate immediately) | `number` | `25` | no |
 | <a name="input_service_name"></a> [service\_name](#input\_service\_name) | DNS hostname for the service. It's also used to name some resources like EC2 instances. | `string` | `"bookstack"` | no |
 | <a name="input_ses_bounce_rate_threshold"></a> [ses\_bounce\_rate\_threshold](#input\_ses\_bounce\_rate\_threshold) | SES bounce rate percentage threshold (AWS recommends keeping below 5%) | `number` | `0.05` | no |
 | <a name="input_ses_complaint_rate_threshold"></a> [ses\_complaint\_rate\_threshold](#input\_ses\_complaint\_rate\_threshold) | SES complaint rate percentage threshold (AWS recommends keeping below 0.1%) | `number` | `0.001` | no |
@@ -538,7 +505,7 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | <a name="input_sns_topic_name"></a> [sns\_topic\_name](#input\_sns\_topic\_name) | Name for the SNS topic. If not provided, defaults to '<service\_name>-alarms' | `string` | `null` | no |
 | <a name="input_ssh_cidr_block"></a> [ssh\_cidr\_block](#input\_ssh\_cidr\_block) | CIDR range that is allowed to SSH into the backend instances.  Format is a.b.c.d/<prefix>. | `string` | `null` | no |
 | <a name="input_storage_encryption_key_arn"></a> [storage\_encryption\_key\_arn](#input\_storage\_encryption\_key\_arn) | KMS key ARN to encrypt RDS instance storage.<br/>If not provided, AWS managed key will be used.<br/>RDS encryption is always enabled. | `string` | `null` | no |
-| <a name="input_ubuntu_codename"></a> [ubuntu\_codename](#input\_ubuntu\_codename) | Ubuntu version to use for the elasticsearch node | `string` | `"jammy"` | no |
+| <a name="input_ubuntu_codename"></a> [ubuntu\_codename](#input\_ubuntu\_codename) | Ubuntu version to use for the BookStack instances | `string` | `"noble"` | no |
 | <a name="input_zone_id"></a> [zone\_id](#input\_zone\_id) | Domain name zone ID where the website will be available | `string` | n/a | yes |
 
 ## Outputs
@@ -552,7 +519,7 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | <a name="output_database_address"></a> [database\_address](#output\_database\_address) | Address of the RDS database instance |
 | <a name="output_database_name"></a> [database\_name](#output\_database\_name) | Name of the database |
 | <a name="output_database_port"></a> [database\_port](#output\_database\_port) | Port of the RDS database instance |
-| <a name="output_database_secret_name"></a> [database\_secret\_name](#output\_database\_secret\_name) | Name of the secret containing database credentials |
+| <a name="output_database_secret_name"></a> [database\_secret\_name](#output\_database\_secret\_name) | Name of the secret containing the database master credentials |
 | <a name="output_rds_instance_identifier"></a> [rds\_instance\_identifier](#output\_rds\_instance\_identifier) | Identifier of the RDS instance. |
 | <a name="output_smtp_credentials_last_rotated"></a> [smtp\_credentials\_last\_rotated](#output\_smtp\_credentials\_last\_rotated) | When SMTP credentials were last rotated (creation date of current key) |
 | <a name="output_smtp_credentials_next_rotation"></a> [smtp\_credentials\_next\_rotation](#output\_smtp\_credentials\_next\_rotation) | Next SMTP credential rotation date (RFC3339 format) |

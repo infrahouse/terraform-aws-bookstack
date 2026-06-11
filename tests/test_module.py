@@ -6,7 +6,9 @@ from time import sleep
 
 import pytest
 from infrahouse_core.aws.asg import ASG
+from infrahouse_core.timeout import timeout
 from pytest_infrahouse import terraform_apply
+from pytest_infrahouse.utils import wait_for_instance_refresh
 
 from tests.conftest import (
     LOG,
@@ -14,9 +16,7 @@ from tests.conftest import (
 )
 
 
-@pytest.mark.parametrize(
-    "aws_provider_version", ["~> 5.62", "~> 6.0"], ids=["aws-5", "aws-6"]
-)
+@pytest.mark.parametrize("aws_provider_version", ["~> 6.0"], ids=["aws-6"])
 def test_module(
     service_network,
     ses,
@@ -67,6 +67,9 @@ def test_module(
             )
         )
 
+    # ALB access logs are replicated cross-region; pick a region different from
+    # the deployment region so the replica bucket isn't in the same region.
+    replication_region = "us-east-2" if aws_region == "us-east-1" else "us-east-1"
     with open(osp.join(terraform_module_dir, "terraform.tfvars"), "w") as fp:
         fp.write(
             dedent(
@@ -78,6 +81,7 @@ def test_module(
                     backend_subnet_ids  = {json.dumps(subnet_public_ids)}
                     internet_gateway_id = "{internet_gateway_id}"
                     ubuntu_codename     = "{ubuntu_codename}"
+                    replication_region  = "{replication_region}"
                     """
             )
         )
@@ -94,7 +98,7 @@ def test_module(
         destroy_after=not keep_after,
         json_output=True,
     ) as tf_output:
-        LOG.info("%s", json.dumps(tf_output, indent=4))
+        LOG.debug("Terraform output:\n%s", json.dumps(tf_output, indent=4))
 
         # Test database connectivity from BookStack instances
         asg_name = tf_output["autoscaling_group_name"]["value"]
@@ -108,33 +112,8 @@ def test_module(
         asg = ASG(asg_name, region=aws_region, role_arn=test_role_arn)
 
         # Wait for any instance refreshes to complete
-        LOG.info("Checking for instance refreshes in ASG: %s", asg_name)
-        max_refresh_wait = 20 * 60  # 20 minutes
-        refresh_check_interval = 30  # Check every 30 seconds
-        refresh_elapsed = 0
-
-        while refresh_elapsed < max_refresh_wait:
-            refreshes = asg.instance_refreshes
-            # Filter for in-progress refreshes
-            in_progress = [
-                r for r in refreshes if r.get("Status") in ["Pending", "InProgress"]
-            ]
-
-            if not in_progress:
-                LOG.info("No in-progress instance refreshes found")
-                break
-
-            LOG.info(
-                "Instance refresh in progress (waited %d/%d seconds): %s",
-                refresh_elapsed,
-                max_refresh_wait,
-                [r.get("InstanceRefreshId") for r in in_progress],
-            )
-            sleep(refresh_check_interval)
-            refresh_elapsed += refresh_check_interval
-
-        if refresh_elapsed >= max_refresh_wait:
-            LOG.warning("Instance refresh timeout reached, proceeding anyway")
+        autoscaling_client = boto3_session.client("autoscaling", region_name=aws_region)
+        wait_for_instance_refresh(asg_name, autoscaling_client)
 
         instances = list(asg.instances)
 
@@ -148,30 +127,22 @@ def test_module(
         LOG.info(
             "Waiting for puppet to complete on instance %s...", instance.instance_id
         )
-        max_wait_time = 15 * 60  # 15 minutes in seconds
-        retry_interval = 30  # Check every 30 seconds
-        elapsed_time = 0
-        puppet_done = False
-
-        while elapsed_time < max_wait_time:
-            response_code, _, cerr = instance.execute_command("ls /tmp/puppet-done")
-            if response_code == 0:
-                puppet_done = True
-                LOG.info("Puppet completed successfully after %d seconds", elapsed_time)
-                break
-            else:
-                LOG.info(
-                    "Puppet not yet complete (waited %d/%d seconds), retrying...",
-                    elapsed_time,
-                    max_wait_time,
-                )
-                sleep(retry_interval)
-                elapsed_time += retry_interval
-
-        assert puppet_done, (
-            f"Puppet did not complete within {max_wait_time} seconds. "
-            f"Last check result: {cerr}"
-        )
+        cerr = None
+        try:
+            with timeout(15 * 60):
+                while True:
+                    response_code, _, cerr = instance.execute_command(
+                        "ls /var/run/puppet-done"
+                    )
+                    if response_code == 0:
+                        LOG.info("Puppet completed successfully")
+                        break
+                    LOG.info("Puppet not yet complete, retrying...")
+                    sleep(30)
+        except TimeoutError:
+            pytest.fail(
+                f"Puppet did not complete within 15 minutes. Last check result: {cerr}"
+            )
 
         # Execute the database connectivity test script
         # The script is deployed via cloud-init extra_files to /usr/local/bin/test-db-connectivity.sh

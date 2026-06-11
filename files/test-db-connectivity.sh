@@ -36,27 +36,12 @@ if [ -z "$DB_PASSWORD" ] || [ "$DB_PASSWORD" == "null" ]; then
     exit 1
 fi
 
-# Create temporary MySQL config file with credentials
-MYSQL_CONFIG=$(mktemp)
-trap "rm -f $MYSQL_CONFIG" EXIT
-
-# Secure the config file
-chmod 600 "$MYSQL_CONFIG"
-
-cat > "$MYSQL_CONFIG" << EOF
-[client]
-host=$DB_HOST
-port=$DB_PORT
-user=$DB_USERNAME
-password=$DB_PASSWORD
-EOF
-
-# Secure the config file
-chmod 600 "$MYSQL_CONFIG"
-
-# Test database connectivity with SELECT 1
+# Test database connectivity with SELECT 1.
+# Pass the password via MYSQL_PWD so it is taken literally. A MySQL option file
+# treats characters such as '#' (comment) and '\' (escape) specially, which
+# corrupts AWS-managed RDS passwords that contain them.
 echo "Testing database connection to $DB_HOST:$DB_PORT..."
-if mysql --defaults-file="$MYSQL_CONFIG" "$DB_DATABASE" -e "SELECT 1 AS test_connection;" 2>&1; then
+if MYSQL_PWD="$DB_PASSWORD" mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USERNAME" "$DB_DATABASE" -e "SELECT 1 AS test_connection;" 2>&1; then
     echo "Database connectivity test PASSED"
     exit 0
 else
