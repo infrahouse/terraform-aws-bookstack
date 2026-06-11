@@ -1,0 +1,32 @@
+# Checkov configuration for the terraform-aws-bookstack module.
+
+framework:
+  - terraform
+
+skip-path:
+  # Test harness fixtures, not part of the published module.
+  - test_data
+
+skip-check:
+  # CKV_TF_1 / CKV_TF_2: InfraHouse modules are pinned to exact versions from the
+  # private registry (registry.infrahouse.com), not commit hashes. This is the
+  # documented InfraHouse standard; Renovate manages version updates via PRs.
+  - CKV_TF_1
+  - CKV_TF_2
+
+  # CKV_AWS_273 / CKV_AWS_40: the SES sender (aws_iam_user.emailer + its policy
+  # attachment) is necessarily an IAM user — SES SMTP authentication requires IAM
+  # user access keys, which cannot be provided via SSO or a group/role for a
+  # service identity. The user's policy already restricts FromAddress to the zone.
+  - CKV_AWS_273
+  - CKV_AWS_40
+
+  # CKV_AWS_26: SSE on the alarm SNS topic. The topic carries only non-sensitive
+  # CloudWatch/SES alarm notifications. Encrypting it with the AWS-managed aws/sns
+  # key breaks CloudWatch's ability to publish (its key policy does not grant
+  # cloudwatch.amazonaws.com), and a dedicated CMK is disproportionate here and
+  # inconsistent with the unencrypted topics the rds/website-pod sub-modules create.
+  - CKV_AWS_26
+
+compact: true
+quiet: false
