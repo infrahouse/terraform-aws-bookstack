@@ -37,6 +37,9 @@ test_data/bookstack/terraform.tf
 /plan.stdout
 __pycache__
 .pytest_cache
+pytest-*-output.log
 /.venv/
 
 .claude/*.local.json
+.claude/reviews
+.claude/plans/*.local.md
