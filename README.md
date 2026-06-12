@@ -408,11 +408,11 @@ Apache 2.0 Licensed. See LICENSE for full details.
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.50.0 |
-| <a name="provider_aws.dns"></a> [aws.dns](#provider\_aws.dns) | 6.50.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | 3.9.0 |
-| <a name="provider_time"></a> [time](#provider\_time) | 0.14.0 |
-| <a name="provider_tls"></a> [tls](#provider\_tls) | 4.3.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0, < 7.0 |
+| <a name="provider_aws.dns"></a> [aws.dns](#provider\_aws.dns) | >= 6.0, < 7.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | ~> 3.6 |
+| <a name="provider_time"></a> [time](#provider\_time) | ~> 0.13 |
+| <a name="provider_tls"></a> [tls](#provider\_tls) | ~> 4.0 |
 
 ## Modules
 
