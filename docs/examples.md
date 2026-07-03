@@ -8,7 +8,7 @@ referenced subnets/zone exist.
 ```hcl
 module "bookstack" {
   source  = "registry.infrahouse.com/infrahouse/bookstack/aws"
-  version = "4.0.0" # always pin an exact release
+  version = "4.1.0" # always pin an exact release
 
   providers = {
     aws     = aws
