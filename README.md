@@ -419,7 +419,7 @@ Apache 2.0 Licensed. See LICENSE for full details.
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_bookstack"></a> [bookstack](#module\_bookstack) | registry.infrahouse.com/infrahouse/website-pod/aws | 6.0.1 |
-| <a name="module_bookstack-userdata"></a> [bookstack-userdata](#module\_bookstack-userdata) | registry.infrahouse.com/infrahouse/cloud-init/aws | 2.3.1 |
+| <a name="module_bookstack-userdata"></a> [bookstack-userdata](#module\_bookstack-userdata) | registry.infrahouse.com/infrahouse/cloud-init/aws | 2.4.0 |
 | <a name="module_bookstack_app_key"></a> [bookstack\_app\_key](#module\_bookstack\_app\_key) | registry.infrahouse.com/infrahouse/secret/aws | 1.3.0 |
 | <a name="module_rds"></a> [rds](#module\_rds) | registry.infrahouse.com/infrahouse/rds/aws | 0.2.2 |
 | <a name="module_ses_smtp_password"></a> [ses\_smtp\_password](#module\_ses\_smtp\_password) | registry.infrahouse.com/infrahouse/secret/aws | 1.3.0 |
