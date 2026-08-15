@@ -17,7 +17,7 @@ The snippets below show individual inputs. They assume the two providers are con
 ```hcl
 module "bookstack" {
   source  = "registry.infrahouse.com/infrahouse/bookstack/aws"
-  version = "4.1.0" # always pin an exact release
+  version = "4.2.0" # always pin an exact release
 
   providers = {
     aws     = aws

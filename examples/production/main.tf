@@ -78,7 +78,7 @@ module "google_client" {
 
 module "bookstack" {
   source  = "registry.infrahouse.com/infrahouse/bookstack/aws"
-  version = "4.1.0"
+  version = "4.2.0"
   providers = {
     aws     = aws
     aws.dns = aws.dns

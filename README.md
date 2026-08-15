@@ -137,7 +137,7 @@ For detailed documentation, visit the
 ```hcl
 module "bookstack" {
   source  = "registry.infrahouse.com/infrahouse/bookstack/aws"
-  version = "4.1.0"
+  version = "4.2.0"
 
   environment = "production"
 
@@ -176,7 +176,7 @@ module "bookstack" {
 ```hcl
 module "bookstack" {
   source  = "registry.infrahouse.com/infrahouse/bookstack/aws"
-  version = "4.1.0"
+  version = "4.2.0"
 
   environment = "production"
 
