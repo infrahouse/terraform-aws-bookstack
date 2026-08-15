@@ -1,4 +1,8 @@
-# SNS topic for BookStack alarms
+# SNS topic for BookStack alarms.
+# Left unencrypted (same rationale as the CKV_AWS_26 skip in .checkov.yml): the
+# topic carries only CloudWatch/SES alarm notifications, and the AWS-managed
+# aws/sns key does not grant cloudwatch.amazonaws.com permission to publish.
+#trivy:ignore:AVD-AWS-0095
 resource "aws_sns_topic" "alarms" {
   name = var.sns_topic_name != null ? var.sns_topic_name : "${var.service_name}-alarms"
 

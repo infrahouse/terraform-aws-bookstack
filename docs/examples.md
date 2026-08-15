@@ -1,7 +1,16 @@
 # Examples
 
-All examples assume the two providers are configured (default `aws` and `aws.dns`) and that the
-referenced subnets/zone exist.
+Complete, runnable configurations live in the
+[examples/](https://github.com/infrahouse/terraform-aws-bookstack/tree/main/examples) directory of
+the repository:
+
+- [examples/basic](https://github.com/infrahouse/terraform-aws-bookstack/tree/main/examples/basic)
+  — a minimal BookStack deployment in a new VPC
+- [examples/production](https://github.com/infrahouse/terraform-aws-bookstack/tree/main/examples/production)
+  — an existing VPC, customer-managed KMS keys, several DNS names and alarms routed to PagerDuty
+
+The snippets below show individual inputs. They assume the two providers are configured (default
+`aws` and `aws.dns`) and that the referenced subnets/zone exist.
 
 ## Minimal
 

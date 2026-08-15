@@ -1,11 +1,40 @@
 # terraform-aws-bookstack
 
-[![InfraHouse](https://img.shields.io/badge/InfraHouse-Terraform_Module-blue?logo=terraform)](https://registry.terraform.io/modules/infrahouse/bookstack/aws/latest)
-[![License](https://img.shields.io/github/license/infrahouse/terraform-aws-bookstack)](LICENSE)
-[![CI](https://github.com/infrahouse/terraform-aws-bookstack/actions/workflows/terraform-CI.yml/badge.svg)](https://github.com/infrahouse/terraform-aws-bookstack/actions/workflows/terraform-CI.yml)
-[![BookStack](https://img.shields.io/badge/BookStack-Documentation-blue?logo=bookstack)](https://www.bookstackapp.com/)
+[![Need Help?](https://img.shields.io/badge/Need%20Help%3F-Contact%20Us-0066CC)](https://infrahouse.com/contact)
+[![Docs](https://img.shields.io/badge/docs-github.io-blue)](https://infrahouse.github.io/terraform-aws-bookstack/)
+[![Registry](https://img.shields.io/badge/Terraform-Registry-purple?logo=terraform)](https://registry.terraform.io/modules/infrahouse/bookstack/aws/latest)
+[![Release](https://img.shields.io/github/release/infrahouse/terraform-aws-bookstack.svg)](https://github.com/infrahouse/terraform-aws-bookstack/releases/latest)
+[![Security](https://img.shields.io/github/actions/workflow/status/infrahouse/terraform-aws-bookstack/vuln-scanner-pr.yml?label=Security)](https://github.com/infrahouse/terraform-aws-bookstack/actions/workflows/vuln-scanner-pr.yml)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
+[![AWS EC2](https://img.shields.io/badge/AWS-EC2-orange?logo=amazonec2)](https://aws.amazon.com/ec2/)
+[![AWS RDS](https://img.shields.io/badge/AWS-RDS-orange?logo=amazonrds)](https://aws.amazon.com/rds/)
+[![AWS EFS](https://img.shields.io/badge/AWS-EFS-orange?logo=amazonwebservices)](https://aws.amazon.com/efs/)
+[![AWS SES](https://img.shields.io/badge/AWS-SES-orange?logo=amazonsimpleemailservice)](https://aws.amazon.com/ses/)
 
 Terraform module to deploy [BookStack](https://www.bookstackapp.com/) on AWS with enterprise-grade security and monitoring.
+
+## Why This Module?
+
+Running BookStack is easy — running it as a service the rest of the company depends on is not.
+A single instance with a local MySQL and a local uploads directory loses every diagram and
+attachment the moment it is replaced, and quietly stops sending email when its SMTP password
+rotates. This module packages the production answer:
+
+- **Instances are disposable**: uploads and images live on an encrypted EFS file system, content
+  lives in a Multi-AZ RDS MySQL instance. An instance can be terminated at any time and nothing
+  is lost.
+- **No secrets in userdata**: the application key, the database password, the SES SMTP password
+  and the Google OAuth client are stored in Secrets Manager and readable only by the BookStack
+  instance role.
+- **Email that keeps working**: a dedicated SES IAM user whose SMTP credentials rotate on a
+  schedule, restricted to sending from your domain, with bounce and complaint alarms that fire
+  before AWS starts throttling your sending.
+- **Encrypted and monitored by default**: RDS and EFS encryption are always on, the load balancer
+  is HTTPS-only, and CloudWatch alarms for CPU, storage, connections, latency, memory and burst
+  credits publish to an SNS topic you subscribe to at deploy time.
+- **Single sign-on out of the box**: Google OAuth is wired end to end, so you do not manage
+  BookStack passwords.
 
 ## Overview
 
@@ -88,19 +117,37 @@ This module deploys a highly available BookStack installation on AWS with:
                 └────────────────┘  └────────────────┘  └────────────────┘
 ```
 
-## Usage
+## Documentation
 
-### Basic Example
+For detailed documentation, visit the
+[GitHub Pages documentation site](https://infrahouse.github.io/terraform-aws-bookstack/).
+
+- [Getting Started](https://infrahouse.github.io/terraform-aws-bookstack/getting-started/)
+- [Architecture](https://infrahouse.github.io/terraform-aws-bookstack/architecture/)
+- [Configuration Reference](https://infrahouse.github.io/terraform-aws-bookstack/configuration/)
+- [Examples](https://infrahouse.github.io/terraform-aws-bookstack/examples/)
+- [Monitoring](https://infrahouse.github.io/terraform-aws-bookstack/monitoring/)
+- [Security](https://infrahouse.github.io/terraform-aws-bookstack/security/)
+- [Troubleshooting](https://infrahouse.github.io/terraform-aws-bookstack/troubleshooting/)
+- [Upgrading](https://infrahouse.github.io/terraform-aws-bookstack/upgrading/)
+- [Changelog](https://infrahouse.github.io/terraform-aws-bookstack/changelog/)
+
+## Quick Start
 
 ```hcl
 module "bookstack" {
   source  = "registry.infrahouse.com/infrahouse/bookstack/aws"
   version = "4.1.0"
 
+  environment = "production"
+
   # Network Configuration
   backend_subnet_ids = ["subnet-abc123", "subnet-def456"]
   lb_subnet_ids      = ["subnet-public1", "subnet-public2"]
-  internet_gateway_id = "igw-xyz789"
+
+  # ALB access logs are replicated to this region. Must differ from the
+  # region the module is deployed to.
+  access_log_replication_region = "us-east-1"
 
   # DNS Configuration
   zone_id = "Z1234567890ABC"
@@ -122,6 +169,8 @@ module "bookstack" {
 }
 ```
 
+## Usage
+
 ### Advanced Example with Custom Encryption Keys
 
 ```hcl
@@ -129,10 +178,13 @@ module "bookstack" {
   source  = "registry.infrahouse.com/infrahouse/bookstack/aws"
   version = "4.1.0"
 
+  environment = "production"
+
   # Network Configuration
   backend_subnet_ids = ["subnet-abc123", "subnet-def456", "subnet-ghi789"]
   lb_subnet_ids      = ["subnet-public1", "subnet-public2", "subnet-public3"]
-  internet_gateway_id = "igw-xyz789"
+
+  access_log_replication_region = "us-east-1"
 
   # DNS Configuration
   zone_id       = "Z1234567890ABC"
@@ -140,10 +192,10 @@ module "bookstack" {
   dns_a_records = ["docs", "wiki", "knowledge"]  # Multiple DNS names
 
   # Instance Configuration
-  instance_type     = "t3.small"
-  db_instance_type  = "db.t3.small"
-  asg_min_size      = 2
-  asg_max_size      = 6
+  instance_type    = "t3.small"
+  db_instance_type = "db.m6g.large" # must support Performance Insights
+  asg_min_size     = 2
+  asg_max_size     = 6
 
   # Encryption with Custom KMS Keys
   storage_encryption_key_arn = aws_kms_key.rds.arn
@@ -161,14 +213,8 @@ module "bookstack" {
   # Custom Alarm Thresholds
   ses_bounce_rate_threshold    = 0.03   # 3% instead of default 5%
   ses_complaint_rate_threshold = 0.0005 # 0.05% instead of default 0.1%
-  rds_cpu_threshold            = 70     # 70% instead of default 80%
-  rds_storage_threshold_gb     = 10     # 10GB instead of default 5GB
-  rds_connections_threshold    = 100    # 100 connections instead of default 80
 
   # RDS Monitoring Configuration
-  enable_rds_cloudwatch_logs              = true
-  rds_cloudwatch_logs_retention_days      = 731  # 2 years instead of default 1 year
-  enable_rds_performance_insights         = true
   rds_performance_insights_retention_days = 731  # 2 years (additional cost) instead of 7-day free tier
 
   # Google OAuth
@@ -187,79 +233,20 @@ module "bookstack" {
 
 ## Important Notes
 
-### Breaking Changes in v3.0
+### Upgrading
 
-1. **`alarm_emails` is now REQUIRED**: You must provide at least one email address for alarm notifications
-2. **Encryption Always Enabled**: RDS and EFS encryption is now mandatory (was optional in v2.x)
-3. **EFS Data Migration**: Upgrading from v2.x will recreate the EFS filesystem - **backup your data first!**
-4. **⚠️ RDS Identifier Change**: The module now uses fixed `identifier` instead of `identifier_prefix` to prevent CloudWatch log group race conditions. **Causes brief downtime during in-place rename** (can be avoided with `db_identifier` variable) - see migration instructions below.
+Upgrade notes for every major version live in
+[docs/upgrading.md](https://infrahouse.github.io/terraform-aws-bookstack/upgrading/).
+The highlights:
 
-### Upgrading from v2.x
-
-#### RDS Identifier Migration
-
-The module now uses a fixed `identifier` instead of `identifier_prefix`. **Good news: AWS RDS allows in-place identifier changes!**
-
-You have two options when upgrading:
-
-**Option 1: Let the identifier change (Recommended)**
-
-```bash
-# Just upgrade - Terraform will rename the identifier in-place
-# Old: bookstack-encrypted20251109012345678900000001
-# New: bookstack-encrypted
-
-terraform plan  # Review the identifier change
-terraform apply # Apply the change
-
-# ⚠️ IMPORTANT: This causes brief RDS downtime during the rename
-# AWS will reboot the instance to apply the new identifier
-# Plan this during a maintenance window
-```
-
-**Option 2: Keep the old identifier (Avoid downtime)**
-
-If you cannot tolerate any downtime:
-
-```bash
-# 1. Get your current RDS identifier
-terraform state show 'module.bookstack.aws_db_instance.db' | grep '^\s*identifier\s*='
-# Example output: identifier = "bookstack-encrypted20251109012345678900000001"
-
-# 2. Set db_identifier in your module configuration
-module "bookstack" {
-  # ... other config ...
-  db_identifier = "bookstack-encrypted20251109012345678900000001"  # Use YOUR actual identifier
-}
-
-# 3. Verify no changes to RDS
-terraform plan  # Should show no identifier change
-
-# ⚠️ WARNING: Once you set db_identifier, it is PERMANENT!
-# Removing it later will trigger an identifier change and cause downtime
-# This option locks in the old naming pattern forever
-```
-
-**Recommendation:** Choose Option 1 for clean naming. The brief downtime is worth having a clean, predictable identifier.
-
-#### EFS Migration (if upgrading from unencrypted EFS)
-
-If you're upgrading from v2.x and have an existing unencrypted EFS:
-
-```bash
-# 1. Backup EFS data
-aws efs describe-file-systems --file-system-id fs-xxxxx
-# Mount and backup: rsync -av /mnt/efs/ /backup/bookstack-uploads/
-
-# 2. Update module version
-# In your terraform code, update to version ~> 3.0
-
-# 3. Apply (will recreate EFS)
-terraform apply
-
-# 4. Restore data
-# Mount new EFS and restore: rsync -av /backup/bookstack-uploads/ /mnt/efs/
-```
+- **3.x → 4.x**: RDS is created by the InfraHouse `rds` module and pinned to MySQL 8.4. The
+  registry module cannot adopt the existing instance, so the data has to be moved with a logical
+  dump/restore — follow the cold-cutover runbook in [MIGRATION.md](MIGRATION.md) **before**
+  applying. `environment` and `access_log_replication_region` became required, AWS provider v5 is
+  no longer supported, and the per-alarm RDS threshold variables, `enable_rds_*` toggles,
+  `db_identifier`, `internet_gateway_id` and `enable_ses_alarms` were removed.
+- **2.x → 3.x**: `alarm_emails` became required, RDS and EFS encryption became mandatory, and the
+  EFS file system is recreated — back up `/mnt/efs` and restore it after the apply.
 
 ### SMTP Credentials and Key Rotation
 
@@ -368,22 +355,29 @@ module.bookstack.smtp_credentials_last_rotated
 ## Requirements
 
 - **Terraform**: ~> 1.5
-- **AWS Provider**: >= 5.11, < 7.0
+- **AWS Provider**: >= 6.0, < 7.0
 - **AWS Account**: With SES verified domain
 - **VPC**: With public and private subnets
 - **Route53**: Hosted zone for your domain
 
+## Examples
+
+Working examples live in the [examples/](examples/) directory:
+
+- [examples/basic](examples/basic) — a minimal BookStack deployment in a new VPC
+- [examples/production](examples/production) — an existing VPC, customer-managed KMS keys,
+  several DNS names and alarms routed to PagerDuty
+
+The [test_data/bookstack](test_data/bookstack) root module used by the integration tests is
+another complete, working configuration.
+
 ## Contributing
 
-Contributions are welcome! Please:
-1. Open an issue to discuss proposed changes
-2. Follow InfraHouse Terraform module standards
-3. Include tests for new features
-4. Update documentation
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-Apache 2.0 Licensed. See LICENSE for full details.
+This module is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
 
 ## Support
 

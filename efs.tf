@@ -63,6 +63,10 @@ resource "aws_vpc_security_group_ingress_rule" "efs_icmp" {
   )
 }
 
+# Egress from the mount targets is unrestricted: the file system only ever answers
+# NFS connections initiated from inside the VPC, so the rule grants no reachability
+# an attacker could use. Ingress is what confines EFS, and it is limited to the VPC.
+#trivy:ignore:aws-vpc-no-public-egress-sgr
 resource "aws_vpc_security_group_egress_rule" "efs" {
   description       = "Allow all outbound traffic from the EFS mount targets"
   security_group_id = aws_security_group.efs.id
