@@ -1,3 +1,6 @@
+# Resolves the SES identity for the Route 53 domain. Reading it fails the apply
+# early when the domain is not verified in SES, instead of letting BookStack
+# deploy with email that silently never sends.
 data "aws_ses_domain_identity" "zone" {
   domain = data.aws_route53_zone.current.name
 }
@@ -48,7 +51,7 @@ data "aws_iam_policy_document" "emailer_permissions" {
     condition {
       test     = "StringLike"
       variable = "ses:FromAddress"
-      values   = ["*@${data.aws_route53_zone.current.name}"]
+      values   = ["*@${data.aws_ses_domain_identity.zone.domain}"]
     }
   }
 }

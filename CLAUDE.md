@@ -31,8 +31,8 @@ pytest -xvvs --aws-region=us-west-2 \
   -k aws-6 tests/test_module.py        # add --keep-after to retain resources
 ```
 
-`test_module` is parametrized over AWS provider `~> 5.62` (`aws-5`) and `~> 6.0` (`aws-6`);
-`-k aws-6` selects one. Tests apply the module, wait for Puppet to finish on an instance
+`test_module` is parametrized over AWS provider `~> 6.0` only (`aws-6`); AWS provider v5 was
+dropped in 4.0.0. Tests apply the module, wait for Puppet to finish on an instance
 (`/tmp/puppet-done`), run an in-instance DB connectivity script, and assert userdata stays
 under the AWS 16 KB limit.
 
@@ -48,8 +48,10 @@ to them. Source files are split by concern (Terraform loads all `*.tf` regardles
   mount, SES mail settings, Google OAuth secret, app key. The website-pod's
   `instance_profile_permissions` comes from `data.aws_iam_policy_document.instance_permissions`
   in `datasources.tf`, granting the EC2 role read access to exactly the four secrets used.
-- **`db.tf`** — Multi-AZ encrypted RDS MySQL 8.0, custom parameter group (`binlog_format=ROW`),
-  CloudWatch log exports, and conditional Performance Insights.
+- **`db.tf`** — a thin wrapper around `infrahouse/rds/aws`: Multi-AZ encrypted MySQL 8.4 with an
+  AWS-managed master password secret, Performance Insights, and the RDS CloudWatch alarms and
+  dashboard the child module provides. Migrating an existing deployment to it is a dump/restore
+  (see `MIGRATION.md`).
 - **`efs.tf`** — Encrypted EFS for shared uploads/images, mount targets per backend subnet,
   NFS security group scoped to the VPC CIDR.
 - **`smtp.tf`** — SES sending via a dedicated IAM user whose access key auto-rotates on a
@@ -57,10 +59,11 @@ to them. Source files are split by concern (Terraform loads all `*.tf` regardles
   the Route 53 zone domain.
 - **`secrets.tf`** — App key, DB credentials, and SES SMTP password stored in Secrets Manager
   via `infrahouse/secret/aws`, each readable only by the EC2 instance role.
-- **`alarms.tf` / `cloudwatch-logs.tf` / `sns.tf`** — RDS + SES CloudWatch alarms publishing
-  to an SNS topic with email subscriptions.
-- **`locals.tf`** — Derived names, SES SMTP endpoints per region, and the
-  Performance-Insights-unsupported instance-type blocklist (PI is auto-disabled for those).
+- **`alarms.tf` / `sns.tf`** — SES bounce/complaint CloudWatch alarms publishing to an SNS topic
+  with email subscriptions (the RDS alarms come from `module.rds`).
+- **`locals.tf`** — Derived names, the module version, and the SES SMTP endpoints per region.
+- **`examples/`** — `basic` and `production` root modules that call the published release; keep
+  their `version = "x.y.z"` lines in `.bumpversion.cfg` when adding a new example.
 
 ### Key cross-cutting concerns
 
@@ -69,9 +72,10 @@ to them. Source files are split by concern (Terraform loads all `*.tf` regardles
 - **Userdata 16 KB limit**: cloud-init userdata must fit AWS's 16 KB cap. The
   `userdata_size_info` output reports utilization; `var.compress_userdata` gzips it. The test
   suite fails if the limit is exceeded — be mindful when adding `packages` or `extra_files`.
-- **Module version**: `local.module_version` in `locals.tf` and `version` strings in
-  `README.md` are kept in sync with `.bumpversion.cfg` (`current_version`). Bump releases with
-  `bumpversion` — do not hand-edit these.
+- **Module version**: `local.module_version` in `locals.tf` (tagged onto the EFS file system) and
+  the `version` strings in `README.md`, `docs/`, and `examples/` are kept in sync with
+  `.bumpversion.cfg` (`current_version`). Release with `make release-{patch,minor,major}`, which
+  updates `CHANGELOG.md` via git-cliff and then runs `bumpversion` — do not hand-edit these.
 
 ## Conventions & workflow
 
@@ -80,7 +84,11 @@ to them. Source files are split by concern (Terraform loads all `*.tf` regardles
 - **Pre-commit hook** (`hooks/pre-commit`, installed by `make install-hooks`) enforces
   `terraform fmt`, regenerates the README's terraform-docs section, and rejects files without a
   trailing newline. The hook is managed externally by the `infrahouse/github-control` repo — do
-  not edit `hooks/` by hand.
+  not edit `hooks/` by hand. `.pre-commit-config.yaml` adds the optional pre-commit framework
+  hooks (`terraform fmt`, `terraform-docs`, `tflint`) on top; install them with `pre-commit
+  install`.
+- **Security scanning**: `checkov` (config in `.checkov.yml`), OSV, and `trivy config` run in CI.
+  Justify any new suppression inline (`#trivy:ignore:<id>` / `# checkov:skip=<id>:<reason>`).
 - **README** has an auto-generated terraform-docs block (config in `.terraform-docs.yml`);
   edit variable/output descriptions in the `.tf` files, not the generated table.
 - **Commits** follow [Conventional Commits](https://www.conventionalcommits.org/)
