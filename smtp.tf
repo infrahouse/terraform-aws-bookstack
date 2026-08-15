@@ -2,7 +2,12 @@ data "aws_ses_domain_identity" "zone" {
   domain = data.aws_route53_zone.current.name
 }
 
-# IAM user for sending emails via SES
+# IAM user for sending emails via SES.
+# The policy is attached to a user rather than a role because SES SMTP
+# authentication requires long-lived IAM user access keys — a role cannot issue
+# them. The keys rotate on the var.smtp_key_rotation_days schedule and the policy
+# restricts sending to FromAddress in the Route 53 zone.
+#trivy:ignore:AVD-AWS-0143
 resource "aws_iam_user" "emailer" {
   name = "${var.service_name}-emailer"
   tags = local.tags

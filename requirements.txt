@@ -1,6 +1,9 @@
 pytest-infrahouse ~= 0.24
 infrahouse-core ~= 1.1
 
+# Development hooks (see .pre-commit-config.yaml)
+pre-commit ~= 4.2
+
 # Documentation dependencies
 diagrams ~= 0.25
 mkdocs-material ~= 9.7

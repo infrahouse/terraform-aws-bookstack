@@ -46,6 +46,24 @@ make test-keep
 make test-clean
 ```
 
+### Pre-commit Hooks
+
+```shell
+pre-commit install
+```
+
+Hooks run automatically on `git commit`
+(see [.pre-commit-config.yaml](.pre-commit-config.yaml)):
+
+- `terraform fmt` - Format Terraform files
+- `terraform-docs` - Update the generated section of README.md
+- `tflint` - Terraform linting
+
+The repo hook installed by `make install-hooks` is preserved as
+`pre-commit.legacy` and still runs after the pre-commit hooks.
+
+Run the checks manually with `pre-commit run --all-files`.
+
 ## Coding Standards
 
 Please follow the coding standards defined in `.claude/CODING_STANDARD.md`:
