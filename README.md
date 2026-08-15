@@ -395,7 +395,7 @@ This module is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.5 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0, < 7.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.6 |
-| <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.13 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.14 |
 | <a name="requirement_tls"></a> [tls](#requirement\_tls) | ~> 4.0 |
 
 ## Providers
@@ -405,14 +405,14 @@ This module is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0, < 7.0 |
 | <a name="provider_aws.dns"></a> [aws.dns](#provider\_aws.dns) | >= 6.0, < 7.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | ~> 3.6 |
-| <a name="provider_time"></a> [time](#provider\_time) | ~> 0.13 |
+| <a name="provider_time"></a> [time](#provider\_time) | ~> 0.14 |
 | <a name="provider_tls"></a> [tls](#provider\_tls) | ~> 4.0 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_bookstack"></a> [bookstack](#module\_bookstack) | registry.infrahouse.com/infrahouse/website-pod/aws | 6.0.1 |
+| <a name="module_bookstack"></a> [bookstack](#module\_bookstack) | registry.infrahouse.com/infrahouse/website-pod/aws | 6.4.0 |
 | <a name="module_bookstack-userdata"></a> [bookstack-userdata](#module\_bookstack-userdata) | registry.infrahouse.com/infrahouse/cloud-init/aws | 2.4.0 |
 | <a name="module_bookstack_app_key"></a> [bookstack\_app\_key](#module\_bookstack\_app\_key) | registry.infrahouse.com/infrahouse/secret/aws | 1.3.0 |
 | <a name="module_rds"></a> [rds](#module\_rds) | registry.infrahouse.com/infrahouse/rds/aws | 0.2.2 |
@@ -443,7 +443,6 @@ This module is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for
 | [time_static.key_rotation](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | resource |
 | [tls_private_key.rsa](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/resources/private_key) | resource |
 | [aws_ami.ubuntu_pro](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
-| [aws_availability_zones.available](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/availability_zones) | data source |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_iam_policy_document.emailer_permissions](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.instance_permissions](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
