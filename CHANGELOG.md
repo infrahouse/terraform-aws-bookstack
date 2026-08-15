@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.1] - 2026-08-15
+
+### Miscellaneous Tasks
+
+- Fix pre-commit hook permissions
+
 ## [4.2.0] - 2026-08-15
 
 ### Documentation
