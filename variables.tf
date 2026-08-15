@@ -183,21 +183,25 @@ variable "puppet_debug_logging" {
 
 variable "puppet_hiera_config_path" {
   description = "Path to hiera configuration file."
+  type        = string
   default     = "{root_directory}/environments/{environment}/hiera.yaml"
 }
 
 variable "puppet_module_path" {
   description = "Path to common puppet modules."
+  type        = string
   default     = "{root_directory}/modules"
 }
 
 variable "puppet_root_directory" {
   description = "Path where the puppet code is hosted."
+  type        = string
   default     = "/opt/puppet-code"
 }
 
 variable "service_name" {
   description = "DNS hostname for the service. It's also used to name some resources like EC2 instances."
+  type        = string
   default     = "bookstack"
 }
 

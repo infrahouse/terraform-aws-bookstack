@@ -5,6 +5,9 @@ resource "aws_efs_file_system" "bookstack-uploads" {
   tags = merge(
     {
       Name = "bookstack-uploads"
+      # The file system is the "main" resource of this module: it outlives every
+      # instance, so it carries the module version the deployment was created with.
+      module_version = local.module_version
     },
     local.tags
   )

@@ -75,22 +75,13 @@ format:  ## Use terraform fmt to format all files in the repo
 	terraform fmt -recursive
 	black tests
 
-define BROWSER_PYSCRIPT
-import os, webbrowser, sys
-
-from urllib.request import pathname2url
-
-webbrowser.open("file://" + pathname2url(os.path.abspath(sys.argv[1])))
-endef
-export BROWSER_PYSCRIPT
-
-BROWSER := python -c "$$BROWSER_PYSCRIPT"
-
 .PHONY: docs
-docs: ## generate Sphinx HTML documentation, including API docs
-	$(MAKE) -C docs clean
-	$(MAKE) -C docs html
-	$(BROWSER) docs/_build/html/index.html
+docs: ## Build the MkDocs documentation site into site/
+	mkdocs build --strict
+
+.PHONY: docs-serve
+docs-serve: ## Serve the documentation site at http://127.0.0.1:8000
+	mkdocs serve
 
 # Internal function to handle version release
 # Args: $(1) = major|minor|patch
