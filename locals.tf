@@ -1,5 +1,5 @@
 locals {
-  module_version = "4.2.0"
+  module_version = "4.2.1"
 
   tags = {
     created_by_module : "infrahouse/bookstack/aws"
