@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.0] - 2026-08-15
+
+### Documentation
+
+- Implement Terraform Module Requirements
+
+### Miscellaneous Tasks
+
+- Bump version to 4.1.0
+- Bump website-pod to 6.4.0, time to ~> 0.14, secret to 1.3.0
+
+### Refactor
+
+- Apply module_version tag and clear tflint findings
+
 ## [4.1.0] - 2026-07-03
 
 ### Miscellaneous Tasks
