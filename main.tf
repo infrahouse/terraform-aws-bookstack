@@ -87,7 +87,7 @@ module "bookstack-userdata" {
 
 module "bookstack" {
   source  = "registry.infrahouse.com/infrahouse/website-pod/aws"
-  version = "6.4.0"
+  version = "6.5.0"
   providers = {
     aws     = aws
     aws.dns = aws.dns
@@ -121,6 +121,12 @@ module "bookstack" {
   alarm_emails                          = var.alarm_emails
   asg_min_elb_capacity                  = 1
   instance_role_name                    = local.ec2_role_name
+
+  # Suppress Inspector findings until profile::boot_security_upgrade has applied
+  # pending security updates and removed the tag. REQUIRES the ec2:DeleteTags
+  # statement in datasources.tf and role::bookstack having the profile deployed --
+  # see .claude/plans/inspector-findings-deferral.md.
+  defer_inspector_findings_until_patched = true
   tags = merge(
     {
       Name : var.service_name
