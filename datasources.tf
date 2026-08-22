@@ -58,6 +58,24 @@ data "aws_iam_policy_document" "instance_permissions" {
       data.aws_secretsmanager_secret.google_client.arn
     ]
   }
+
+  # Lets profile::boot_security_upgrade drop the InspectorEc2Exclusion tag once
+  # security updates are applied. Scoped to this tag key, to instances, and to
+  # instances this module created.
+  statement {
+    actions   = ["ec2:DeleteTags"]
+    resources = ["arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:instance/*"]
+    condition {
+      test     = "ForAllValues:StringEquals"
+      variable = "aws:TagKeys"
+      values   = ["InspectorEc2Exclusion"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "ec2:ResourceTag/created_by_module"
+      values   = ["infrahouse/bookstack/aws"]
+    }
+  }
 }
 
 data "aws_vpc" "selected" {
