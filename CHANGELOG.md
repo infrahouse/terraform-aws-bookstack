@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.3.0] - 2026-08-22
+
+### Features
+
+- Defer Inspector findings until instances are patched
+
 ## [4.2.1] - 2026-08-15
 
 ### Miscellaneous Tasks
