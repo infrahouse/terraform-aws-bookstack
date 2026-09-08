@@ -1,4 +1,4 @@
-pytest-infrahouse ~= 0.24
+pytest-infrahouse ~= 0.25
 # 1.3 adds ASG.launch_tags, used by the Inspector exclusion tag assertions.
 infrahouse-core ~= 1.3
 
