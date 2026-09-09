@@ -308,20 +308,22 @@ Output example:
 }
 ```
 
-#### Enable Compression
+#### Compression
 
-If userdata approaches the 16KB limit (>12KB), enable compression:
+Userdata is gzip-compressed by default (`compress_userdata = true`). Uncompressed it renders about
+17 KB, over EC2's 16384-byte cap; gzipped it is about 7 KB. Cloud-init detects the gzip magic bytes
+and decompresses before executing, so nothing downstream changes.
+
+To turn it off, first confirm you have the headroom in `userdata_size_info`:
 
 ```hcl
 module "bookstack" {
   source = "registry.infrahouse.com/infrahouse/bookstack/aws"
   # ... other configuration ...
 
-  compress_userdata = true  # Enable gzip compression
+  compress_userdata = false  # only if payload_bytes is comfortably under 16384
 }
 ```
-
-Compression typically reduces userdata size by 60-70%, allowing more packages and configuration.
 
 #### Reduce Userdata Size
 
@@ -469,7 +471,7 @@ This module is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for
 | <a name="input_backend_subnet_ids"></a> [backend\_subnet\_ids](#input\_backend\_subnet\_ids) | List of subnet ids where the webserver and database instances will be created | `list(string)` | n/a | yes |
 | <a name="input_bookstack_prebuilt_package_sha256"></a> [bookstack\_prebuilt\_package\_sha256](#input\_bookstack\_prebuilt\_package\_sha256) | Expected SHA-256 of the bookstack\_prebuilt\_package\_url artifact. The artifact is verified<br/>against this value before Puppet runs; a mismatch deletes the download and fails the bootstrap,<br/>so a tampered or replaced object cannot inject code into the application. Must be updated<br/>together with bookstack\_prebuilt\_package\_url. Set to null to skip verification (not recommended). | `string` | `"9e31388ce60d740b344a52db2bbd806eb0bd92122ac4783c9f1b0e3d372980e3"` | no |
 | <a name="input_bookstack_prebuilt_package_url"></a> [bookstack\_prebuilt\_package\_url](#input\_bookstack\_prebuilt\_package\_url) | URL of a pre-built BookStack release tarball that already includes the composer<br/>vendor/ directory (single top-level dir, like the upstream source archive). It is<br/>downloaded to /var/tmp/bookstack.tar.gz before Puppet runs, which makes the Puppet<br/>profile's download\_package and run\_composer steps no-op (their `creates` guards are<br/>satisfied). This avoids running composer at boot, and with it the flaky Codeberg<br/>archive endpoint used by the ssddanbrown/htmldiff dependency.<br/><br/>The version of this tarball MUST match the BookStack version configured in the Puppet<br/>profile (profile::bookstack::bookstack_package_url). Set to null to disable and use<br/>the stock flow (Puppet downloads source and runs composer install). | `string` | `"https://infrahouse-omnibus-cache.s3.us-west-1.amazonaws.com/bookstack/bookstack-v25.02.1-vendor.tar.gz"` | no |
-| <a name="input_compress_userdata"></a> [compress\_userdata](#input\_compress\_userdata) | Compress userdata with gzip to reduce size and work around AWS 16KB limit.<br/><br/>When enabled, userdata is gzip-compressed before being sent to EC2 instances.<br/>AWS automatically decompresses it before execution. This can reduce userdata<br/>size by 60-70%, allowing more packages, files, and configuration.<br/><br/>Recommended: Enable if userdata\_size\_info shows approaching limit (>12KB).<br/><br/>Requirements: gzip command must be available on the system running terraform. | `bool` | `false` | no |
+| <a name="input_compress_userdata"></a> [compress\_userdata](#input\_compress\_userdata) | Compress userdata with gzip to stay under the AWS 16 KB user data limit.<br/><br/>EC2 caps user data at 16384 bytes of decoded payload. Uncompressed, this<br/>module renders ~17 KB and CreateLaunchTemplate fails with<br/>InvalidUserData.Malformed. Gzip cuts that to ~7 KB; cloud-init detects the<br/>gzip magic bytes and decompresses before executing, so nothing else changes.<br/><br/>Disable only if you have trimmed packages/extra\_files enough to fit, and<br/>check the userdata\_size\_info output before you do. | `bool` | `true` | no |
 | <a name="input_db_instance_type"></a> [db\_instance\_type](#input\_db\_instance\_type) | Instance type to run the database instances. Must support RDS Performance<br/>Insights, which the RDS module enables unconditionally (so db.t3.micro/small<br/>and db.t4g.micro/small are not valid choices). | `string` | `"db.t3.medium"` | no |
 | <a name="input_deletion_protection"></a> [deletion\_protection](#input\_deletion\_protection) | Specifies whether to enable deletion protection for the DB instance. | `bool` | `true` | no |
 | <a name="input_dns_a_records"></a> [dns\_a\_records](#input\_dns\_a\_records) | A list of A records the BookStack application will be accessible at.<br/>E.g. ["wiki"] or ["bookstack", "docs"].<br/>By default, it will be [var.service\_name]. | `list(string)` | `null` | no |
@@ -517,5 +519,5 @@ This module is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for
 | <a name="output_smtp_credentials_last_rotated"></a> [smtp\_credentials\_last\_rotated](#output\_smtp\_credentials\_last\_rotated) | When SMTP credentials were last rotated (creation date of current key) |
 | <a name="output_smtp_credentials_next_rotation"></a> [smtp\_credentials\_next\_rotation](#output\_smtp\_credentials\_next\_rotation) | Next SMTP credential rotation date (RFC3339 format) |
 | <a name="output_sns_topic_arn"></a> [sns\_topic\_arn](#output\_sns\_topic\_arn) | ARN of the SNS topic for alarms |
-| <a name="output_userdata_size_info"></a> [userdata\_size\_info](#output\_userdata\_size\_info) | Userdata size information for launch template validation.<br/>AWS limit is 16KB (16384 bytes) after base64 encoding.<br/>If size exceeds limit, EC2 launch will fail. |
+| <a name="output_userdata_size_info"></a> [userdata\_size\_info](#output\_userdata\_size\_info) | Userdata size information for launch template validation.<br/>EC2 limits user data to 16384 bytes of decoded payload; the base64 string<br/>that carries it is ~4/3 longer and is not what the limit applies to.<br/>Exceeding it fails CreateLaunchTemplate with InvalidUserData.Malformed. |
 <!-- END_TF_DOCS -->

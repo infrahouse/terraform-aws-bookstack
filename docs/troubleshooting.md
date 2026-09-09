@@ -42,8 +42,15 @@ authenticates directly against the endpoint.
 
 ## Userdata exceeds the 16 KB limit
 
-Check the `userdata_size_info` output. If `status` is `EXCEEDS LIMIT` or `APPROACHING LIMIT`, set
-`compress_userdata = true`, or reduce `packages`/`extra_files`.
+The symptom is `CreateLaunchTemplate` failing with
+`InvalidUserData.Malformed: User data is limited to 16384 bytes.` Despite the error code, this is a
+size problem, and the 16384 bytes are counted on the *decoded* payload — not on the longer base64
+string the launch template carries.
+
+`compress_userdata` is enabled by default and gets the payload to roughly 7 KB, so hitting this
+means either it was turned off or `packages`/`extra_files` have grown a lot. Check the
+`userdata_size_info` output for `payload_bytes` and `status`, then re-enable compression or trim
+what is being injected.
 
 ## No alarm emails / duplicate alarm emails
 

@@ -367,16 +367,16 @@ variable "smtp_key_rotation_days" {
 
 variable "compress_userdata" {
   description = <<-EOT
-    Compress userdata with gzip to reduce size and work around AWS 16KB limit.
+    Compress userdata with gzip to stay under the AWS 16 KB user data limit.
 
-    When enabled, userdata is gzip-compressed before being sent to EC2 instances.
-    AWS automatically decompresses it before execution. This can reduce userdata
-    size by 60-70%, allowing more packages, files, and configuration.
+    EC2 caps user data at 16384 bytes of decoded payload. Uncompressed, this
+    module renders ~17 KB and CreateLaunchTemplate fails with
+    InvalidUserData.Malformed. Gzip cuts that to ~7 KB; cloud-init detects the
+    gzip magic bytes and decompresses before executing, so nothing else changes.
 
-    Recommended: Enable if userdata_size_info shows approaching limit (>12KB).
-
-    Requirements: gzip command must be available on the system running terraform.
+    Disable only if you have trimmed packages/extra_files enough to fit, and
+    check the userdata_size_info output before you do.
   EOT
   type        = bool
-  default     = false
+  default     = true
 }

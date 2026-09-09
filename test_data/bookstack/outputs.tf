@@ -21,3 +21,7 @@ output "database_name" {
 output "database_secret_name" {
   value = module.bookstack.database_secret_name
 }
+
+output "userdata_size_info" {
+  value = module.bookstack.userdata_size_info
+}
