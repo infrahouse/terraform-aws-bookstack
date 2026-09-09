@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.4.0] - 2026-09-09
+
+### Bug Fixes
+
+- Bump cloud-init to 2.4.1 to pin json gem below 3.0
+- Compress userdata by default and correct its size accounting
+
+### Miscellaneous Tasks
+
+- Bump pytest-infrahouse to 0.25 for retry in terraform_apply()
+
 ## [4.3.0] - 2026-08-22
 
 ### Features
