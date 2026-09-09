@@ -52,5 +52,6 @@ The SES SMTP IAM access key rotates on a `time_rotating` schedule (`smtp_key_rot
 ## Userdata size
 
 Cloud-init userdata must fit AWS's 16 KB limit. The `userdata_size_info` output reports current
-utilization, remaining bytes, and a status (`OK` / `APPROACHING LIMIT` / `EXCEEDS LIMIT`). Enable
-`compress_userdata` if you approach the cap.
+utilization, remaining bytes, and a status (`OK` / `APPROACHING LIMIT` / `EXCEEDS LIMIT`). The limit
+applies to `payload_bytes` (the decoded payload), not to the base64 string. `compress_userdata` is on
+by default; if you approach the cap with it enabled, trim `packages`/`extra_files`.

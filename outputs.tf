@@ -61,26 +61,32 @@ output "database_secret_name" {
 output "userdata_size_info" {
   description = <<-EOT
     Userdata size information for launch template validation.
-    AWS limit is 16KB (16384 bytes) after base64 encoding.
-    If size exceeds limit, EC2 launch will fail.
+    EC2 limits user data to 16384 bytes of decoded payload; the base64 string
+    that carries it is ~4/3 longer and is not what the limit applies to.
+    Exceeding it fails CreateLaunchTemplate with InvalidUserData.Malformed.
   EOT
   value = {
     compression_enabled = var.compress_userdata
-    raw_bytes           = length(module.bookstack-userdata.userdata)
-    base64_bytes        = ceil(length(module.bookstack-userdata.userdata) * 4 / 3)
-    base64_kb           = format("%.2f", ceil(length(module.bookstack-userdata.userdata) * 4 / 3) / 1024)
+    base64_chars        = local.userdata_b64_chars
+    payload_bytes       = local.userdata_bytes
+    payload_kb          = format("%.2f", local.userdata_bytes / 1024)
     aws_limit_kb        = "16.00"
-    remaining_bytes     = 16384 - ceil(length(module.bookstack-userdata.userdata) * 4 / 3)
-    utilization_pct     = format("%.1f%%", (ceil(length(module.bookstack-userdata.userdata) * 4 / 3) / 16384) * 100)
+    remaining_bytes     = local.userdata_limit - local.userdata_bytes
+    utilization_pct     = format("%.1f%%", (local.userdata_bytes / local.userdata_limit) * 100)
     status = (
-      ceil(length(module.bookstack-userdata.userdata) * 4 / 3) > 16384 ? "❌ EXCEEDS LIMIT" :
-      ceil(length(module.bookstack-userdata.userdata) * 4 / 3) > 14336 ? "⚠️  APPROACHING LIMIT" :
+      local.userdata_bytes > local.userdata_limit ? "❌ EXCEEDS LIMIT" :
+      local.userdata_bytes > 14336 ? "⚠️  APPROACHING LIMIT" :
       "✓ OK"
     )
     recommendation = (
-      ceil(length(module.bookstack-userdata.userdata) * 4 / 3) > 16384 ? "CRITICAL: Enable compression (var.compress_userdata = true) or reduce userdata size" :
-      ceil(length(module.bookstack-userdata.userdata) * 4 / 3) > 14336 && !var.compress_userdata ? "Consider enabling var.compress_userdata = true to compress userdata" :
-      ceil(length(module.bookstack-userdata.userdata) * 4 / 3) > 14336 ? "Approaching limit even with compression - reduce extra_files or packages" :
+      local.userdata_bytes > local.userdata_limit && !var.compress_userdata ?
+      "CRITICAL: set var.compress_userdata = true, or reduce userdata size" :
+      local.userdata_bytes > local.userdata_limit ?
+      "CRITICAL: over the limit even compressed - reduce extra_files or packages" :
+      local.userdata_bytes > 14336 && !var.compress_userdata ?
+      "Consider setting var.compress_userdata = true to compress userdata" :
+      local.userdata_bytes > 14336 ?
+      "Approaching limit even compressed - reduce extra_files or packages" :
       "Size is within safe limits"
     )
   }
